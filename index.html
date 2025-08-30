@@ -1,0 +1,695 @@
+<!doctype html>
+<html lang="en" class="no-js">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<title>QuickDownload — Premium Fast HD Social Media Downloader (Owner‑Authorized)</title>
+<meta name="description" content="QuickDownload is a premium, fast-loading downloader UI to save owner-authorized Instagram, X (Twitter), Facebook, TikTok, YouTube Shorts & Snapchat media in HD. Clean, secure, ad-friendly and SEO-optimized."/>
+<meta name="keywords" content="instagram downloader hd, twitter video saver, facebook reel download, tiktok audio mp3, youtube shorts to mp3, snapchat download, bulk social downloader, csv batch download"/>
+<meta name="robots" content="index,follow,max-snippet:-1,max-image-preview:large,max-video-preview:-1"/>
+<link rel="canonical" href="https://example.com/"/>
+
+<!-- Social -->
+<meta property="og:title" content="QuickDownload — Premium HD Social Media Saver"/>
+<meta property="og:description" content="Download owner-authorized videos & images fast in HD. Clean UI, bulk mode, SEO-perfect."/>
+<meta property="og:type" content="website"/>
+<meta property="og:site_name" content="QuickDownload"/>
+<meta property="og:image" content="https://via.placeholder.com/1200x630.png?text=QuickDownload+OG"/>
+<meta name="twitter:card" content="summary_large_image"/>
+
+<!-- Performance hints -->
+<link rel="preconnect" href="https://via.placeholder.com" crossorigin>
+<link rel="dns-prefetch" href="https://via.placeholder.com">
+<meta http-equiv="x-dns-prefetch-control" content="on">
+
+<!-- PWA manifest -->
+<link rel="manifest" href='data:application/manifest+json,{"name":"QuickDownload","short_name":"QD","start_url":"/","display":"standalone","background_color":"#0b1220","theme_color":"#06b6d4"}'>
+
+<style>
+/* =============== THEME =============== */
+:root{
+  --bg: #0b1220; --bg-grad1:#041026; --bg-grad2:#071127;
+  --card:#0c1427; --text:#e6eef6; --muted:#98a0ad;
+  --line: rgba(255,255,255,.08);
+  --accent1:#7c3aed; --accent2:#06b6d4; --accent3:#22d3ee;
+  --glass: rgba(255,255,255,.05);
+  --shadow: 0 10px 40px rgba(2,6,23,.5);
+}
+html.light{
+  --bg:#f7fafc; --bg-grad1:#ffffff; --bg-grad2:#f3f7fb;
+  --card:#ffffff; --text:#0b1220; --muted:#5b6575;
+  --line: rgba(16,24,40,.08);
+  --glass: rgba(16,24,40,.03);
+  --shadow: 0 8px 24px rgba(16,24,40,.08);
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif;background:linear-gradient(180deg,var(--bg-grad1) 0%,var(--bg-grad2) 100%);color:var(--text);-webkit-font-smoothing:antialiased}
+a{color:inherit}
+img{max-width:100%;height:auto;display:block}
+.container{max-width:1160px;margin:24px auto;padding:0 18px}
+
+/* Header */
+.header{display:flex;gap:16px;align-items:center}
+.logo{width:56px;height:56px;border-radius:14px;background:linear-gradient(135deg,var(--accent2),var(--accent1));display:flex;align-items:center;justify-content:center;font-weight:800;color:#041024;box-shadow:var(--shadow)}
+.title{font-size:20px;font-weight:800;letter-spacing:.2px}
+.tag{color:var(--muted);font-size:13px}
+
+/* controls */
+.controls{margin-left:auto;display:flex;gap:10px;align-items:center}
+.icon-btn{line-height:1;background:rgba(255,255,255,.04);border:1px solid var(--line);padding:10px 12px;border-radius:12px;cursor:pointer;color:var(--text);backdrop-filter:blur(6px);transition:transform .06s ease}
+.icon-btn:active{transform:translateY(1px)}
+.lang-flag{font-size:12px;padding:8px 10px;border-radius:10px;border:1px solid var(--line);background:var(--glass);cursor:pointer}
+
+/* layout */
+.grid{display:grid;grid-template-columns:1fr 360px;gap:18px;margin-top:18px}
+.card{background:var(--card);padding:16px;border-radius:14px;box-shadow:var(--shadow);border:1px solid var(--line)}
+.subtle{background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.02));border:1px solid var(--line)}
+.input-row{display:flex;gap:10px;align-items:center}
+.input{flex:1;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:transparent;color:inherit;font-size:15px}
+.select{padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:transparent;color:inherit}
+
+/* tabs */
+.tabs{display:flex;gap:8px;margin-top:12px}
+.tab{padding:8px 12px;border-radius:10px;border:1px solid var(--line);background:var(--glass);cursor:pointer}
+.tab.active{background:linear-gradient(90deg,var(--accent2),var(--accent1));color:#041024;font-weight:800}
+
+/* preview */
+.preview{margin-top:12px;border-radius:12px;overflow:hidden}
+.media{background:#07122a;display:flex;align-items:center;justify-content:center;min-height:220px;padding:12px;border-radius:10px}
+.meta{padding:12px}
+.qualities{padding:12px;border-top:1px dashed var(--line)}
+.quality{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px dashed var(--line)}
+.dl-link{background:linear-gradient(90deg,var(--accent2),var(--accent1));color:#041024;padding:10px 14px;border-radius:10px;text-decoration:none;font-weight:800}
+
+/* sidebar */
+.sidebar{display:flex;flex-direction:column;gap:12px}
+.ad-slot{height:250px;border-radius:12px;background:var(--glass);display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:13px; border:1px dashed var(--line)}
+
+/* bulk */
+.bulk-wrap{display:flex;gap:12px;flex-wrap:wrap}
+.bulk-area{flex:1;min-width:260px;min-height:120px;padding:12px;border-radius:10px;background:rgba(255,255,255,0.02);border:1px dashed var(--line);color:var(--text);resize:vertical}
+.csv{display:flex;flex-direction:column;gap:8px;min-width:260px}
+.table{width:100%;border-collapse:collapse;margin-top:10px;border:1px solid var(--line)}
+.table th,.table td{padding:8px 10px;border-bottom:1px solid var(--line);font-size:13px}
+.badge{padding:4px 8px;border-radius:999px;font-size:12px;border:1px solid var(--line);background:var(--glass)}
+
+/* blog & faq */
+.blog-list{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.blog-card{background:var(--glass);padding:12px;border-radius:10px;border:1px solid var(--line)}
+.faq{border-top:1px solid var(--line);margin-top:8px}
+.faq details{border-bottom:1px solid var(--line);padding:10px 4px}
+.faq summary{cursor:pointer;font-weight:700}
+
+/* footer */
+.footer{margin-top:20px;color:var(--muted);font-size:13px;text-align:center;padding-bottom:30px}
+
+/* responsive */
+@media(max-width:1020px){ .grid{grid-template-columns:1fr} .blog-list{grid-template-columns:1fr}}
+
+/* loader */
+.loader{width:28px;height:28px;border-radius:50%;border:4px solid rgba(255,255,255,0.14);border-top-color:var(--accent2);animation:spin 1s linear infinite;display:inline-block;vertical-align:middle}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* small */
+.small{color:var(--muted);font-size:13px}
+
+/* focus */
+:focus{outline:3px solid rgba(6,182,212,0.25);outline-offset:2px}
+</style>
+<script>
+/* Prevent theme flash: apply saved theme before paint */
+(function(){
+  try{
+    const t = localStorage.getItem('qd-theme');
+    if(t){ document.documentElement.classList.toggle('light', t==='light'); }
+    document.documentElement.classList.remove('no-js');
+  }catch(_){ }
+})();
+</script>
+</head>
+<body>
+  <main class="container" id="app" role="main">
+    <header class="header" role="banner" aria-label="QuickDownload header">
+      <div style="display:flex;gap:12px;align-items:center">
+        <div class="logo" aria-hidden="true">QD</div>
+        <div>
+          <div class="title" id="siteTitle" aria-label="site title">QuickDownload</div>
+          <div class="tag" id="siteTag">Fast • HD • Secure • Owner‑Authorized</div>
+        </div>
+      </div>
+
+      <div class="controls" role="toolbar" aria-label="controls">
+        <button class="icon-btn" id="themeToggle" title="Toggle theme" aria-pressed="false">🌙</button>
+        <button class="lang-flag" id="langEn" aria-current="true">EN</button>
+        <button class="lang-flag" id="langTa">தமிழ்</button>
+      </div>
+    </header>
+
+    <section class="grid" aria-live="polite">
+      <!-- MAIN -->
+      <div>
+        <div class="card subtle" aria-labelledby="dlHeading">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
+            <div>
+              <h1 id="dlHeading" style="margin:0;font-size:22px">Paste link → Download (HD)</h1>
+              <p class="small" id="dlSub" style="margin:4px 0 0 0">Supports Instagram, X (Twitter), Facebook, TikTok, YouTube Shorts & Snapchat — <strong>owner-authorized only</strong>.</p>
+            </div>
+            <div class="small">Tip: Paste URL & press <kbd>Enter</kbd></div>
+          </div>
+
+          <div class="tabs" role="tablist" aria-label="Mode">
+            <button id="tabSingle" class="tab active" role="tab" aria-selected="true">Single</button>
+            <button id="tabBulk" class="tab" role="tab" aria-selected="false">Bulk</button>
+          </div>
+
+          <!-- SINGLE -->
+          <div id="singlePanel" class="panel" role="tabpanel" aria-labelledby="tabSingle">
+            <div style="margin-top:12px" class="input-row" role="search">
+              <input id="urlInput" class="input" type="url" placeholder="https://www.instagram.com/reel/..." autocomplete="off" aria-label="Post URL" inputmode="url">
+              <button id="fetchBtn" class="icon-btn" aria-label="Fetch preview">Fetch</button>
+              <button id="pasteBtn" class="icon-btn" title="Paste from clipboard">Paste</button>
+            </div>
+
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;gap:10px;flex-wrap:wrap">
+              <div class="small">
+                <button id="clearBtn" class="icon-btn">Clear</button>
+                <span id="lastAction" class="small" aria-live="polite"></span>
+              </div>
+              <div style="display:flex;align-items:center;gap:10px">
+                <label class="small" style="display:flex;align-items:center;gap:8px"><input id="audioOnly" type="checkbox"> Audio (MP3)</label>
+                <label class="small" style="display:flex;align-items:center;gap:8px">
+                  Quality:
+                  <select id="qualitySelect" class="select" style="width:140px">
+                    <option value="1080p">1080p</option><option value="720p" selected>720p</option><option value="480p">480p</option>
+                  </select>
+                </label>
+              </div>
+            </div>
+
+            <div id="status" class="small" style="margin-top:12px"></div>
+
+            <!-- PREVIEW -->
+            <div id="previewPanel" class="preview" style="display:none;margin-top:12px">
+              <div id="mediaBox" class="media" aria-live="polite"></div>
+              <div class="meta" style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+                <div>
+                  <div id="titleText" style="font-weight:800"></div>
+                  <div id="authorText" class="small"></div>
+                </div>
+                <div class="small">Smart suggestion: <span id="smartQuality" class="badge">720p</span></div>
+              </div>
+              <div id="qualities" class="qualities" role="list"></div>
+            </div>
+          </div>
+
+          <!-- BULK -->
+          <div id="bulkPanel" class="panel" role="tabpanel" aria-labelledby="tabBulk" style="display:none">
+            <div class="bulk-wrap" style="margin-top:12px">
+              <textarea id="bulkInput" class="bulk-area" placeholder="Paste multiple URLs — one per line (max 50)"></textarea>
+              <div class="csv">
+                <label class="small"><strong>Or upload CSV</strong> (single column “url”)</label>
+                <input id="csvInput" type="file" accept=".csv,text/csv" class="input" />
+                <a id="sampleCsv" class="small" href="data:text/csv,URL%0Ahttps%3A%2F%2Fwww.instagram.com%2Freel%2Fabc%0Ahttps%3A%2F%2Fx.com%2Fuser%2Fstatus%2F123" download="sample.csv">Download sample.csv</a>
+              </div>
+            </div>
+            <div style="display:flex;gap:10px;margin-top:10px;flex-wrap:wrap">
+              <button id="bulkValidateBtn" class="icon-btn">Validate</button>
+              <button id="bulkFetchBtn" class="icon-btn">Start Bulk</button>
+              <button id="bulkClearBtn" class="icon-btn">Clear</button>
+            </div>
+            <div id="bulkHelper" class="small" style="margin-top:8px">Paste or upload. Click <strong>Validate</strong> to preview and fix errors.</div>
+            <div id="bulkTableWrap" style="margin-top:10px; display:none">
+              <table class="table" aria-label="Bulk queue">
+                <thead><tr><th>#</th><th>URL</th><th>Platform</th><th>Status</th><th>Action</th></tr></thead>
+                <tbody id="bulkTbody"></tbody>
+              </table>
+              <div class="small" style="margin-top:6px">Progress updates live. Use “Retry” for failed rows.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SEO / Guides -->
+        <div class="card" style="margin-top:14px">
+          <h2 style="margin:0 0 8px 0">Guides & Tips</h2>
+          <div class="blog-list" id="blogList">
+            <article class="blog-card">
+              <h3>Download Instagram Reels in HD (2025)</h3>
+              <p class="small">Paste the link, preview the thumbnail, pick 1080p or 720p, and save. Only download what you own or have permission to use.</p>
+              <a class="small" href="#faq">Read FAQs →</a>
+            </article>
+            <article class="blog-card">
+              <h3>Bulk Mode: From CSV to Results</h3>
+              <p class="small">Use the sample CSV, validate your list, then run the queue. Track each item’s status with realtime badges.</p>
+              <a class="small" href="#bulk">Try bulk →</a>
+            </article>
+          </div>
+          <div id="faq" class="faq">
+            <h3 style="margin:12px 0 6px 0">FAQs</h3>
+            <details>
+              <summary>Is QuickDownload legal to use?</summary>
+              <div class="small">Yes, when you download content you own or have explicit permission to use. We don’t encourage copyright infringement and we respect platform Terms.</div>
+            </details>
+            <details>
+              <summary>Which platforms are supported?</summary>
+              <div class="small">Instagram, X (Twitter), Facebook, TikTok, YouTube Shorts, and Snapchat via your authorized API backend.</div>
+            </details>
+            <details>
+              <summary>Does bulk support audio‑only?</summary>
+              <div class="small">Yes. The API can return MP3 variants per item. In the demo UI, “Audio (MP3)” simulates this behavior for preview.</div>
+            </details>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- SIDEBAR -->
+      <aside class="sidebar" aria-label="sidebar">
+        <div class="ad-slot card" aria-hidden="true">Ad placeholder — 300×250</div>
+
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <strong>Trending</strong> <span class="small">Today</span>
+          </div>
+          <div id="trendList" class="trend-list" style="margin-top:8px;display:flex;flex-direction:column;gap:10px"></div>
+        </div>
+
+        <div class="card">
+          <strong>Quick tips</strong>
+          <ol class="small" style="margin-top:8px">
+            <li>Use owner-authorized links</li>
+            <li>Prefer 720p for quick mobile downloads</li>
+            <li>Bulk: validate before running</li>
+          </ol>
+        </div>
+
+        <div class="card small" style="text-align:center">Ad placeholder (native)</div>
+      </aside>
+    </section>
+
+    <!-- legal + contact -->
+    <section style="margin-top:18px;display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="card" id="disclaimer">
+        <h3>Disclaimer</h3>
+        <p class="small">QuickDownload is a UI shell. It does not scrape or bypass restrictions. Downloads must be owner‑authorized. Your backend should implement Terms‑compliant APIs.</p>
+        <p class="small"><a href="#privacy">Privacy Policy</a> • <a href="#terms">Terms</a> • <a href="#contact">Contact</a></p>
+      </div>
+
+      <div class="card" id="admin">
+        <h3>Analytics (Admin)</h3>
+        <p class="small">Placeholder admin panel — connect your backend for live stats.</p>
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <button id="adminFetch" class="icon-btn">Fetch Stats</button>
+          <button id="adminReset" class="icon-btn">Reset</button>
+        </div>
+        <div id="adminArea" style="margin-top:10px" class="small"></div>
+      </div>
+    </section>
+
+    <section id="contact" class="card" style="margin-top:14px">
+      <h3 style="margin-top:0">Contact</h3>
+      <form id="contactForm" class="small" novalidate>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <input class="input" type="text" id="name" placeholder="Your name" required>
+          <input class="input" type="email" id="email" placeholder="Email" required>
+        </div>
+        <input class="input" type="text" id="subject" placeholder="Subject" style="margin-top:10px">
+        <textarea class="input" id="message" rows="4" placeholder="Message" style="margin-top:10px"></textarea>
+        <div style="display:flex;gap:8px;margin-top:10px;align-items:center">
+          <button type="submit" class="dl-link" style="border:none">Send</button>
+          <span id="contactStatus" class="small" aria-live="polite"></span>
+        </div>
+      </form>
+    </section>
+
+    <section id="privacy" class="card" style="margin-top:14px">
+      <h3 style="margin-top:0">Privacy Policy (Short)</h3>
+      <p class="small">We don’t store personal content unless you explicitly send it (e.g., contact form). Basic analytics may be collected after consent to improve reliability. No scraping or bypass code is present in the frontend.</p>
+    </section>
+
+    <section id="terms" class="card" style="margin-top:14px">
+      <h3 style="margin-top:0">Terms of Use</h3>
+      <p class="small">Use downloads only for content you own or have permission to use. You agree not to violate any platform Terms of Service. This UI is provided “as is” without warranties.</p>
+    </section>
+
+    <footer class="footer">
+      <div>© <span id="year"></span> QuickDownload • Fast • Clean • Compliant</div>
+    </footer>
+  </main>
+
+<!-- Structured Data (JSON-LD) -->
+<script type="application/ld+json">
+{
+ "@context":"https://schema.org",
+ "@graph":[
+  {"@type":"Organization","@id":"https://example.com/#org","name":"QuickDownload","url":"https://example.com/","logo":"https://via.placeholder.com/256x256.png?text=QD","sameAs":[]},
+  {"@type":"WebSite","@id":"https://example.com/#website","url":"https://example.com/","name":"QuickDownload","publisher":{"@id":"https://example.com/#org"},"potentialAction":{"@type":"SearchAction","target":"https://example.com/?q={search_term_string}","query-input":"required name=search_term_string"}},
+  {"@type":"SoftwareApplication","name":"QuickDownload","applicationCategory":"MultimediaApplication","operatingSystem":"Web","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}},
+  {"@type":"BreadcrumbList","itemListElement":[
+    {"@type":"ListItem","position":1,"name":"Home","item":"https://example.com/"},
+    {"@type":"ListItem","position":2,"name":"Guides","item":"https://example.com/#faq"}
+  ]},
+  {"@type":"FAQPage","mainEntity":[
+    {"@type":"Question","name":"Is QuickDownload legal to use?","acceptedAnswer":{"@type":"Answer","text":"Yes, when you download content you own or have explicit permission to use. We don’t encourage copyright infringement."}},
+    {"@type":"Question","name":"Which platforms are supported?","acceptedAnswer":{"@type":"Answer","text":"Instagram, X (Twitter), Facebook, TikTok, YouTube Shorts, and Snapchat via your authorized backend."}},
+    {"@type":"Question","name":"Does bulk support audio-only?","acceptedAnswer":{"@type":"Answer","text":"Yes. Your API can return MP3 variants per item; the UI supports toggling audio-only."}}
+  ]}
+ ]
+}
+</script>
+
+<script defer>
+/* ============================
+   QuickDownload FRONTEND SHELL (Premium)
+   ============================
+   - All network calls are DEMO placeholders.
+   - Replace DEMO with secure backend APIs:
+     POST /api/preview  -> { success, title, thumbnail, author, files:[{label,url,type,quality}] }
+     POST /api/download -> { success, downloadUrl }
+     POST /api/bulk     -> { jobId }
+     GET  /api/bulk/:id -> { items:[{url,platform,status,downloadUrl?}], done }
+*/
+
+// helpers
+const $ = id => document.getElementById(id);
+$('year').textContent = new Date().getFullYear();
+
+// STATE
+let lang='en';
+let activeTab='single';
+let currentPreview=null;
+
+// Theme
+function applyThemeIcon(){
+  const light = document.documentElement.classList.contains('light');
+  const btn=$('themeToggle'); btn.textContent = light ? '☀️' : '🌙';
+  btn.setAttribute('aria-pressed', light ? 'true':'false');
+}
+$('themeToggle').addEventListener('click', ()=>{
+  const isLight = document.documentElement.classList.toggle('light');
+  try{ localStorage.setItem('qd-theme', isLight?'light':'dark'); }catch(_){ }
+  applyThemeIcon();
+});
+applyThemeIcon();
+
+// Language (EN/TA minimal demo copy)
+function setLang(l){
+  lang=l;
+  if(l==='ta'){
+    $('siteTitle').textContent='க்விக் டவுன்லோட்';
+    $('siteTag').textContent='வேகம் • HD • பாதுகாப்பு • அனுமதி';
+    $('dlHeading').textContent='லிங்க் ஒட்டவும் → பதிவிறக்கவும்';
+    $('dlSub').textContent='Instagram, X (Twitter), Facebook, TikTok, YouTube Shorts & Snapchat — உரிமையாளர் அனுமதி அவசியம்.';
+  } else {
+    $('siteTitle').textContent='QuickDownload';
+    $('siteTag').textContent='Fast • HD • Secure • Owner‑Authorized';
+    $('dlHeading').textContent='Paste link → Download (HD)';
+    $('dlSub').textContent='Supports Instagram, X (Twitter), Facebook, TikTok, YouTube Shorts & Snapchat — owner-authorized only.';
+  }
+  $('langEn').setAttribute('aria-current', l==='en');
+  $('langTa').removeAttribute('aria-current');
+  if(l==='ta') $('langTa').setAttribute('aria-current','true');
+}
+$('langEn').addEventListener('click', ()=>setLang('en'));
+$('langTa').addEventListener('click', ()=>setLang('ta'));
+setLang('en');
+
+// Tabs
+function setTab(name){
+  activeTab=name;
+  $('tabSingle').classList.toggle('active', name==='single');
+  $('tabBulk').classList.toggle('active', name==='bulk');
+  $('singlePanel').style.display = name==='single'?'block':'none';
+  $('bulkPanel').style.display   = name==='bulk'  ?'block':'none';
+}
+$('tabSingle').addEventListener('click', ()=>setTab('single'));
+$('tabBulk').addEventListener('click', ()=>setTab('bulk'));
+setTab('single');
+
+// Clipboard & inputs
+$('pasteBtn').addEventListener('click', async ()=>{
+  try{ const txt = await navigator.clipboard.readText(); $('urlInput').value = txt; $('lastAction').textContent = 'Pasted from clipboard'; }catch(e){ $('lastAction').textContent='Clipboard unavailable'; }
+});
+$('clearBtn').addEventListener('click', ()=>{ $('urlInput').value=''; $('lastAction').textContent=''; $('previewPanel').style.display='none'; $('status').textContent=''; });
+$('fetchBtn').addEventListener('click', ()=> fetchPreview($('urlInput').value.trim()));
+$('urlInput').addEventListener('keydown', (e)=>{ if(e.key==='Enter') fetchPreview($('urlInput').value.trim()); });
+
+// Smart quality suggestion (very simple heuristic)
+function smartSuggest(){
+  const isMobile = /Mobi|Android/i.test(navigator.userAgent);
+  const q = isMobile ? '720p' : '1080p';
+  $('smartQuality').textContent = q;
+}
+smartSuggest();
+
+// Trending (mock)
+const trending = [
+  {title:'Reel by @studio', thumb:'https://via.placeholder.com/120x68?text=IG', url:'#'},
+  {title:'Funny clip • 2.1M views', thumb:'https://via.placeholder.com/120x68?text=X', url:'#'},
+  {title:'Travel short • HD', thumb:'https://via.placeholder.com/120x68?text=TT', url:'#'}
+];
+(function renderTrending(){
+  const t=$('trendList'); t.innerHTML='';
+  trending.forEach(it=>{
+    const row=document.createElement('a'); row.href=it.url; row.className='blog-card'; row.style.display='flex'; row.style.gap='10px'; row.style.alignItems='center';
+    row.innerHTML = `<img loading="lazy" fetchpriority="low" src="${it.thumb}" width="96" height="54" style="border-radius:8px;object-fit:cover" alt="">
+      <div style="flex:1"><div style="font-weight:800">${it.title}</div><div class="small">Popular</div></div>`;
+    t.appendChild(row);
+  });
+})();
+
+// Admin demo
+$('adminFetch').addEventListener('click', ()=>{
+  $('adminArea').textContent='Fetching stats...';
+  setTimeout(()=>{$('adminArea').innerHTML='<div>Total downloads: <b>1,842</b> • Today: <b>213</b> • Success: <b>98.7%</b></div>';},700);
+});
+$('adminReset').addEventListener('click', ()=>{ $('adminArea').textContent='Reset complete.'; });
+
+// Contact form (demo)
+$('contactForm').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const status=$('contactStatus'); status.textContent='Sending...';
+  // Replace with POST /api/contact
+  setTimeout(()=>{ status.textContent='Thanks! We’ll get back to you soon.'; e.target.reset(); }, 700);
+});
+
+/* ======= Status helper ======= */
+function setStatus(msg, loading=false){
+  const s=$('status');
+  if(loading) s.innerHTML = `<span class="loader" role="status" aria-label="loading"></span> ${msg}`;
+  else s.textContent = msg || '';
+}
+
+/* ======= Preview & Download flow (EXTENDED THUMBNAILS) ======= */
+async function fetchPreview(url){
+  if(!url){ setStatus('Please paste a URL'); return; }
+  setStatus('Fetching preview...', true);
+  $('previewPanel').style.display='none';
+  currentPreview = null;
+
+  // Simulate delay for demo; replace with real API call in production
+  await new Promise(r=>setTimeout(r,500));
+
+  // Attempt to detect platform and get a meaningful thumbnail
+  let thumb=null, title='Preview', author='';
+  let files=[
+    // Demo files (static). Replace via backend /api/preview for real variants
+    {label:'MP4 1080p', url:'https://sample-videos.com/video123/mp4/720/big_buck_bunny.mp4', type:'video/mp4', quality:'1080p'},
+    {label:'MP4 720p',  url:'https://sample-videos.com/video123/mp4/480/big_buck_bunny.mp4', type:'video/mp4', quality:'720p'}
+  ];
+
+  try{
+    const u = new URL(url);
+    const host = u.hostname.replace('www.','').toLowerCase();
+
+    // ---- YouTube (incl. shorts & youtu.be) real thumbnail ----
+    const ytId = (()=>{
+      if(host.includes('youtu.be')){ // https://youtu.be/VIDEOID
+        return u.pathname.slice(1).split('/')[0];
+      }
+      if(host.includes('youtube.com')){
+        if(u.pathname.startsWith('/shorts/')){ // /shorts/VIDEOID
+          return u.pathname.split('/')[2] || u.pathname.split('/')[1];
+        }
+        const v = u.searchParams.get('v');
+        if(v) return v;
+      }
+      return null;
+    })();
+    if(ytId){
+      thumb = `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`;
+      title = 'YouTube Video';
+    }
+
+    // ---- Instagram (needs API) -> placeholder demo ----
+    if(!thumb && host.includes('instagram.com')){
+      thumb = 'https://via.placeholder.com/600x800.png?text=Instagram+Demo';
+      title = 'Instagram Post';
+    }
+
+    // ---- TikTok (needs API) -> placeholder demo ----
+    if(!thumb && host.includes('tiktok.com')){
+      thumb = 'https://via.placeholder.com/600x800.png?text=TikTok+Demo';
+      title = 'TikTok Video';
+    }
+
+    // ---- Twitter/X (needs proxy for OG) -> placeholder demo ----
+    if(!thumb && (host.includes('twitter.com') || host.includes('x.com'))){
+      thumb = 'https://via.placeholder.com/600x400.png?text=Twitter+Demo';
+      title = 'Twitter Post';
+    }
+
+    // ---- Facebook (needs proxy for OG) -> placeholder demo ----
+    if(!thumb && (host.includes('facebook.com') || host.includes('fb.watch'))){
+      thumb = 'https://via.placeholder.com/600x400.png?text=Facebook+Demo';
+      title = 'Facebook Video';
+    }
+
+    // ---- Snapchat (no public OG without proxy) -> placeholder ----
+    if(!thumb && host.includes('snapchat.com')){
+      thumb = 'https://via.placeholder.com/600x800.png?text=Snapchat+Demo';
+      title = 'Snapchat Story';
+    }
+
+  }catch(err){
+    // invalid URL or parsing issue
+  }
+
+  // Fallback thumbnail
+  if(!thumb) thumb = 'https://via.placeholder.com/1200x675.png?text=No+Preview';
+
+  const data = { success:true, title, author, thumbnail:thumb, files };
+
+  if(!data || !data.success){ setStatus('No media found'); return; }
+  currentPreview = data; renderPreview(data); setStatus('');
+}
+
+function renderPreview(data){
+  $('previewPanel').style.display='block';
+  $('mediaBox').innerHTML = '';
+  $('qualities').innerHTML = '';
+
+  if(data.thumbnail){
+    const img = document.createElement('img');
+    img.src = data.thumbnail; img.alt = data.title || 'Preview';
+    img.style.borderRadius = '10px';
+    img.loading='eager'; img.fetchPriority='high';
+    $('mediaBox').appendChild(img);
+  } else if(data.files?.[0]?.type?.startsWith('video')){
+    const v = document.createElement('video'); v.src = data.files[0].url; v.controls=true; v.style.maxWidth='100%';
+    $('mediaBox').appendChild(v);
+  } else {
+    $('mediaBox').textContent = 'Preview not available';
+  }
+
+  $('titleText').textContent = data.title || 'Untitled';
+  $('authorText').textContent = data.author || '';
+
+  (data.files||[]).forEach(f=>{
+    const row = document.createElement('div'); row.className='quality';
+    const left = document.createElement('div'); left.textContent = f.label || f.quality || 'Download';
+    const right = document.createElement('div');
+    const a = document.createElement('a'); a.className='dl-link'; a.textContent='Download'; a.href='#';
+    a.addEventListener('click', async (e)=>{
+      e.preventDefault();
+      // Replace with real server call when backend available
+      if($('audioOnly').checked) window.open((f.url.replace(/\.mp4$/,'') + '.mp3'),'_blank');
+      else window.open(f.url,'_blank');
+    });
+    right.appendChild(a); row.appendChild(left); row.appendChild(right); $('qualities').appendChild(row);
+  });
+}
+
+/* ===== Bulk: clearer UX ===== */
+const bulkState = { rows:[] };
+$('bulkClearBtn').addEventListener('click', ()=>{
+  $('bulkInput').value=''; $('bulkTableWrap').style.display='none'; $('bulkTbody').innerHTML=''; bulkState.rows=[];
+});
+$('bulkValidateBtn').addEventListener('click', ()=>{
+  const urls = collectBulkUrls(); if(!urls.length){ $('bulkHelper').textContent='No URLs found. Paste or upload CSV.'; return; }
+  buildBulkTable(urls);
+});
+$('bulkFetchBtn').addEventListener('click', async ()=>{
+  if(!bulkState.rows.length){ $('bulkHelper').textContent='Validate first, then Start Bulk.'; return; }
+  // DEMO simulate queue progress
+  for (let i=0;i<bulkState.rows.length;i++){
+    const r = bulkState.rows[i];
+    updateBulkStatus(i,'Queued');
+    await sleep(250);
+    updateBulkStatus(i,'Processing');
+    await sleep(600 + Math.random()*600);
+    const ok = Math.random() > 0.05;
+    updateBulkStatus(i, ok?'Done':'Failed', ok? 'https://sample-videos.com/video123/mp4/720/big_buck_bunny.mp4': null);
+  }
+});
+
+$('csvInput').addEventListener('change', (e)=>{
+  const file=e.target.files?.[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=()=>{ const txt = String(reader.result||''); $('bulkInput').value = mergeTextLists($('bulkInput').value, parseCsv(txt)); };
+  reader.readAsText(file);
+});
+
+function collectBulkUrls(){
+  const txt = $('bulkInput').value.trim();
+  const urls = txt.split('\n').map(s=>s.trim()).filter(Boolean).slice(0,50);
+  return urls;
+}
+function parseCsv(text){
+  // very simple CSV (single column or header URL)
+  const lines=text.split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
+  if(!lines.length) return '';
+  const header = lines[0].toLowerCase();
+  const values = header.includes('url') ? lines.slice(1) : lines;
+  return values.join('\n');
+}
+function mergeTextLists(existing, adds){
+  const set = new Set((existing?existing.split('\n'):[]).concat(adds?adds.split('\n'):[]).map(s=>s.trim()).filter(Boolean));
+  return Array.from(set).slice(0,50).join('\n');
+}
+function detectPlatform(u){
+  try{
+    const h=new URL(u).hostname.replace('www.','');
+    if(/instagram\.com$/i.test(h)) return 'Instagram';
+    if(/^x\.com$|twitter\.com$/i.test(h)) return 'X';
+    if(/facebook\.com$|fb\.watch$/i.test(h)) return 'Facebook';
+    if(/tiktok\.com$/i.test(h)) return 'TikTok';
+    if(/youtube\.com$|youtu\.be$/i.test(h)) return 'YouTube';
+    if(/snapchat\.com$/i.test(h)) return 'Snapchat';
+    return 'Other';
+  }catch{ return 'Invalid'; }
+}
+function buildBulkTable(urls){
+  const tbody=$('bulkTbody'); tbody.innerHTML='';
+  bulkState.rows = urls.map((u,i)=>({url:u, platform:detectPlatform(u), status:'Ready', link:null}));
+  bulkState.rows.forEach((r,i)=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML = `<td>${i+1}</td><td style="word-break:break-all">${escapeHtml(r.url)}</td><td>${r.platform}</td><td id="st-${i}"><span class="badge">Ready</span></td><td><button class="icon-btn" data-idx="${i}">Retry</button></td>`;
+    tbody.appendChild(tr);
+  });
+  tbody.querySelectorAll('button[data-idx]').forEach(btn=>{
+    btn.addEventListener('click', async (e)=>{
+      const i=parseInt(e.currentTarget.getAttribute('data-idx'),10);
+      updateBulkStatus(i,'Processing'); await sleep(700);
+      const ok=Math.random()>0.15; updateBulkStatus(i, ok?'Done':'Failed', ok?'https://sample-videos.com/video123/mp4/720/big_buck_bunny.mp4':null);
+    });
+  });
+  $('bulkTableWrap').style.display='block';
+  $('bulkHelper').textContent='Looks good! Click “Start Bulk” to begin.';
+}
+function updateBulkStatus(i, state, link=null){
+  const cell = $('st-'+i);
+  const label = `<span class="badge">${state}</span>`;
+  cell.innerHTML = link ? `${label} <a class="small" href="${link}" target="_blank" rel="nofollow">Download</a>` : label;
+  bulkState.rows[i].status = state; bulkState.rows[i].link=link;
+}
+function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
+function escapeHtml(s){ return s.replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;' }[m])); }
+
+/* ========== PWA Service Worker registration (optional) ========== */
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('/sw.js').catch(()=>{/* ignore in demo if sw not hosted */});
+}
+</script>
+</body>
+</html>
