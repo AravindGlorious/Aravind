@@ -16,51 +16,38 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Basic security & performance middlewares
-app.use(helmet({
-  contentSecurityPolicy: false // keep CSP simple for CDN Tailwind; tighten later
-}));
-app.use(compression());
-app.use(morgan('tiny'));
+// Middleware
 app.use(cors());
-app.use(express.json({ limit: '200kb' }));
-
-// Static assets
-app.use(express.static(path.join(__dirname, 'public'), {
-  maxAge: '1d',
-  setHeaders: (res) => {
-    res.setHeader('Cache-Control', 'public, max-age=86400, immutable');
-  }
-}));
+app.use(helmet());
+app.use(compression());
+app.use(morgan('dev'));
+app.use(express.json()); // for parsing JSON request bodies
 
 // Health check
 app.get('/api/health', (req, res) => {
   res.json({ ok: true, uptime: process.uptime() });
 });
 
-// Info endpoint — returns metadata for any supported URL
+// Info endpoint
 app.post('/api/info', async (req, res) => {
   try {
     const { url } = req.body || {};
-    if (!url || typeof url !== 'string') {
-      return res.status(400).json({ error: 'Missing or invalid url' });
-    }
+    if (!url) return res.status(400).json({ error: 'Missing url' });
+
     const info = await getVideoInfo(url);
-    return res.json(info);
+    res.json(info);
   } catch (err) {
     console.error('INFO ERROR:', err);
-    return res.status(500).json({ error: 'Failed to fetch info', detail: String(err?.message || err) });
+    res.status(500).json({ error: 'Failed to fetch info', detail: err.message });
   }
 });
 
-// Download endpoint — streams original/best quality to client
-// Example: GET /api/download?url=...&format=best
+// Download endpoint
 app.get('/api/download', async (req, res) => {
   try {
     const { url, format = 'best' } = req.query;
     if (!url) return res.status(400).json({ error: 'Missing url' });
 
-    // Set a generic filename; getVideoInfo for title if you want exact
     const safeName = 'video';
     res.setHeader('Content-Type', 'application/octet-stream');
     res.setHeader('Content-Disposition', `attachment; filename="${safeName}.mp4"`);
@@ -69,18 +56,22 @@ app.get('/api/download', async (req, res) => {
   } catch (err) {
     console.error('DOWNLOAD ERROR:', err);
     if (!res.headersSent) {
-      res.status(500).json({ error: 'Download failed', detail: String(err?.message || err) });
+      res.status(500).json({ error: 'Download failed', detail: err.message });
     } else {
       res.end();
     }
   }
 });
 
-// Fallback to index.html for root only (no SPA routing here)
-app.get('/', (req, res) => {
+// Serve frontend
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Fallback to index.html for SPA routing
+app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 app.listen(PORT, () => {
-  console.log(`\n✔ Server running on http://localhost:${PORT}`);
+  console.log(`✔ Server running on http://localhost:${PORT}`);
 });
+
