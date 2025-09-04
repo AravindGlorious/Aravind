@@ -9,6 +9,9 @@ const title = $('#title');
 const meta = $('#meta');
 const errorEl = $('#error');
 
+// === Replace this with your deployed backend URL ===
+const BACKEND_URL = "https://your-backend.onrender.com"; 
+
 // Year in footer
 const y = document.getElementById('year');
 if (y) y.textContent = new Date().getFullYear();
@@ -24,11 +27,12 @@ form?.addEventListener('submit', async (e) => {
   checkBtn.textContent = 'Checking…';
 
   try {
-    const r = await fetch('/api/info', {
+    const r = await fetch(`${BACKEND_URL}/api/info`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ url })
     });
+
     const info = await r.json();
     if (!r.ok) throw new Error(info?.error || 'Failed');
 
@@ -41,7 +45,7 @@ form?.addEventListener('submit', async (e) => {
     // Enable download
     downloadBtn.disabled = false;
     downloadBtn.onclick = () => {
-      const dUrl = `/api/download?url=${encodeURIComponent(url)}&format=best`;
+      const dUrl = `${BACKEND_URL}/api/download?url=${encodeURIComponent(url)}&format=best`;
       window.location.href = dUrl;
     };
   } catch (err) {
