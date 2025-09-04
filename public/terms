@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Terms & Conditions — QuickDownload</title>
+  <meta name="description" content="Terms and acceptable use for QuickDownload." />
+  <link rel="canonical" href="/terms" />
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 text-gray-900">
+  <main class="max-w-3xl mx-auto px-4 py-10">
+    <h1 class="text-3xl font-bold">Terms & Conditions</h1>
+    <p class="mt-4 text-gray-600">Use this service only to download content you own or have permission to download. You are responsible for complying with the terms of the source platform and local laws.</p>
+    <h2 class="mt-8 text-xl font-semibold">Acceptable Use</h2>
+    <ul class="list-disc pl-5 mt-2 text-gray-700">
+      <li>No automated abuse or scraping.</li>
+      <li>No infringement of copyrights or terms of other platforms.</li>
+      <li>No reverse engineering or security circumvention.</li>
+    </ul>
+    <h2 class="mt-8 text-xl font-semibold">Disclaimer</h2>
+    <p class="mt-2 text-gray-700">Service provided “as is” without warranties. Availability is not guaranteed.</p>
+    <p class="mt-10 text-sm text-gray-500">Last updated: 2025‑09‑04</p>
+  </main>
+</body>
+</html>
