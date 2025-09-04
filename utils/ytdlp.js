@@ -15,21 +15,22 @@ export function getVideoInfo(url) {
     child.on('close', (code) => {
       if (code !== 0) return reject(new Error(errData || `yt-dlp exited with code ${code}`));
       try {
-        const json = JSON.parse(data);
-        // For playlists, json can be an object with entries[]
-        const primary = json?.entries?.length ? json.entries[0] : json;
-        resolve({
-          title: primary?.title || 'Untitled',
-          thumbnail: primary?.thumbnail || primary?.thumbnails?.[0]?.url || '',
-          duration: primary?.duration || null,
-          uploader: primary?.uploader || primary?.channel || '',
-          webpage_url: primary?.webpage_url || url,
-          extractor: primary?.extractor || json?.extractor,
-          is_playlist: Boolean(json?.entries?.length),
-        });
-      } catch (e) {
-        reject(e);
-      }
+  const json = JSON.parse(data);
+  const primary = json?.entries?.length ? json.entries[0] : json;
+  resolve({
+    title: primary?.title || 'Untitled',
+    thumbnail: primary?.thumbnail || primary?.thumbnails?.[0]?.url || '',
+    duration: primary?.duration || null,
+    uploader: primary?.uploader || primary?.channel || '',
+    webpage_url: primary?.webpage_url || url,
+    extractor: primary?.extractor || json?.extractor,
+    is_playlist: Boolean(json?.entries?.length),
+  });
+} catch (e) {
+  console.error('yt-dlp output was not valid JSON:', data);
+  reject(new Error('yt-dlp output is not valid JSON. Make sure the URL is correct and yt-dlp is installed.'));
+}
+
     });
 
     child.on('error', reject);
