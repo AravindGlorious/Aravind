@@ -5,9 +5,10 @@
   "main": "server.js",
   "type": "module",
   "scripts": {
-    "start": "node server.js",
-    "dev": "NODE_ENV=development nodemon server.js"
-  },
+  "start": "node server.js",
+  "dev": "NODE_ENV=development nodemon server.js",
+  "postinstall": "python3 -m pip install -U yt-dlp && apt-get update && apt-get install -y ffmpeg"
+}
   "keywords": [
     "downloader",
     "yt-dlp",
