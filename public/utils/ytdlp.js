@@ -1,62 +1,63 @@
-import { spawn } from 'child_process';
+// utils/ytdlp.js
+import ytdlp from 'yt-dlp-exec';
+import ffmpegPath from 'ffmpeg-static';
 
-// Helper to run yt-dlp and capture JSON metadata
-export function getVideoInfo(url) {
-  return new Promise((resolve, reject) => {
-    const args = ['-J', '--no-warnings', '--no-call-home', url];
-    const child = spawn('yt-dlp', args);
-
-    let data = '';
-    let errData = '';
-
-    child.stdout.on('data', (chunk) => { data += chunk.toString(); });
-    child.stderr.on('data', (chunk) => { errData += chunk.toString(); });
-
-    child.on('close', (code) => {
-      if (code !== 0) return reject(new Error(errData || `yt-dlp exited with code ${code}`));
-      try {
-        const json = JSON.parse(data);
-        // For playlists, json can be an object with entries[]
-        const primary = json?.entries?.length ? json.entries[0] : json;
-        resolve({
-          title: primary?.title || 'Untitled',
-          thumbnail: primary?.thumbnail || primary?.thumbnails?.[0]?.url || '',
-          duration: primary?.duration || null,
-          uploader: primary?.uploader || primary?.channel || '',
-          webpage_url: primary?.webpage_url || url,
-          extractor: primary?.extractor || json?.extractor,
-          is_playlist: Boolean(json?.entries?.length),
-        });
-      } catch (e) {
-        reject(e);
-      }
+// Fetch video info as JSON
+export async function getVideoInfo(url) {
+  try {
+    const json = await ytdlp(url, {
+      dumpJson: true,
+      noWarnings: true,
+      noCallHome: true,
+      ffmpegLocation: ffmpegPath,
     });
 
-    child.on('error', reject);
-  });
+    const primary = json?.entries?.length ? json.entries[0] : json;
+
+    return {
+      title: primary?.title || 'Untitled',
+      thumbnail: primary?.thumbnail || primary?.thumbnails?.[0]?.url || '',
+      duration: primary?.duration || null,
+      uploader: primary?.uploader || primary?.channel || '',
+      webpage_url: primary?.webpage_url || url,
+      extractor: primary?.extractor || json?.extractor,
+      is_playlist: Boolean(json?.entries?.length),
+    };
+  } catch (err) {
+    console.error('YT-DLP INFO ERROR:', err);
+    throw new Error(`yt-dlp info failed: ${err.message}`);
+  }
 }
 
 // Stream download directly to HTTP response
-export function streamDownload({ url, format = 'best' }, res) {
-  return new Promise((resolve, reject) => {
-    // -f best chooses the best available combination. "-o -" writes to stdout
-    const args = ['-f', format, '-o', '-', '--no-warnings', '--no-call-home', url];
-    const child = spawn('yt-dlp', args);
-
-    child.stdout.pipe(res);
-
-    let errData = '';
-    child.stderr.on('data', (chunk) => { errData += chunk.toString(); });
-
-    child.on('close', (code) => {
-      if (code !== 0) {
-        return reject(new Error(errData || `yt-dlp exited with code ${code}`));
-      }
-      resolve();
+export async function streamDownload({ url, format = 'best' }, res) {
+  try {
+    const proc = ytdlp(url, {
+      format,
+      ffmpegLocation: ffmpegPath,
+      o: '-', // output to stdout
+      noWarnings: true,
+      noCallHome: true,
     });
 
-    child.on('error', (err) => {
-      reject(err);
+    proc.stdout.pipe(res);
+
+    proc.stderr.on('data', (chunk) => {
+      console.error('YT-DLP STDERR:', chunk.toString());
     });
-  });
+
+    return new Promise((resolve, reject) => {
+      proc.on('close', (code) => {
+        if (code !== 0) {
+          reject(new Error(`yt-dlp exited with code ${code}`));
+        } else {
+          resolve();
+        }
+      });
+      proc.on('error', reject);
+    });
+  } catch (err) {
+    console.error('YT-DLP DOWNLOAD ERROR:', err);
+    throw new Error(`yt-dlp download failed: ${err.message}`);
+  }
 }
