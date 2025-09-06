@@ -6,7 +6,8 @@ import helmet from 'helmet';
 import compression from 'compression';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
-import ytdlp from 'yt-dlp-exec';
+import ytdlp from "yt-dlp-exec";
+import fs from "fs";
 
 dotenv.config();
 
@@ -14,16 +15,16 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 10000;   // Render default port = 10000
 
 // Middleware
 app.use(cors());
 app.use(helmet());
 app.use(compression());
 app.use(morgan('dev'));
-app.use(express.json()); // JSON body parsing
+app.use(express.json()); // for parsing JSON request bodies
 
-// ---- YT-DLP helpers ---- //
+// Helper: get video info
 async function getVideoInfo(url) {
   return await ytdlp(url, {
     dumpSingleJson: true,
@@ -31,32 +32,35 @@ async function getVideoInfo(url) {
     noCallHome: true,
     preferFreeFormats: true,
     addHeader: ["referer:youtube.com", "user-agent:googlebot"],
-    cookies: path.join(__dirname, "cookies.txt")   // ✅ cookies added
+    cookies: path.join(__dirname, "cookies.txt") // 👈 YouTube login cookies if needed
   });
 }
 
+// Helper: stream download
 async function streamDownload({ url, format = "best" }, res) {
   const child = ytdlp.exec(url, {
     format,
     output: "-",
-    cookies: path.join(__dirname, "cookies.txt")   // ✅ cookies added
+    cookies: path.join(__dirname, "cookies.txt")
   });
 
   child.stdout.pipe(res);
   child.stderr.on("data", (data) => {
     console.error("yt-dlp error:", data.toString());
   });
+
   child.on("close", (code) => {
     console.log(`yt-dlp exited with code ${code}`);
     res.end();
   });
 }
 
-// Routes
+// Health check
 app.get('/api/health', (req, res) => {
   res.json({ ok: true, uptime: process.uptime() });
 });
 
+// Info endpoint
 app.post('/api/info', async (req, res) => {
   try {
     const { url } = req.body || {};
@@ -70,13 +74,15 @@ app.post('/api/info', async (req, res) => {
   }
 });
 
+// Download endpoint
 app.get('/api/download', async (req, res) => {
   try {
     const { url, format = 'best' } = req.query;
     if (!url) return res.status(400).json({ error: 'Missing url' });
 
+    const safeName = 'video';
     res.setHeader('Content-Type', 'application/octet-stream');
-    res.setHeader('Content-Disposition', 'attachment; filename="video.mp4"');
+    res.setHeader('Content-Disposition', `attachment; filename="${safeName}.mp4"`);
 
     await streamDownload({ url, format }, res);
   } catch (err) {
@@ -92,12 +98,12 @@ app.get('/api/download', async (req, res) => {
 // Serve frontend
 app.use(express.static(path.join(__dirname, 'public')));
 
-// SPA fallback
+// Fallback to index.html for SPA routing
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`✔ Server running on http://localhost:${PORT}`);
+// Start server (Render-compatible)
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`✔ Server running on http://0.0.0.0:${PORT}`);
 });
