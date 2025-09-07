@@ -3,7 +3,7 @@ import ytdlp from "yt-dlp-exec";
 import ffmpegPath from "ffmpeg-static";
 import fs from "fs";
 
-// ✅ Use /tmp (Render & Vercel la writable path)
+// ✅ Render & Vercel writable path
 const cookiesPath = "/tmp/cookies.txt";
 
 // ✅ Write cookies.txt from ENV variable if available
@@ -14,9 +14,13 @@ if (process.env.YOUTUBE_COOKIES) {
   } catch (err) {
     console.error("❌ Failed to write cookies file:", err.message);
   }
+} else {
+  console.warn("⚠️ YOUTUBE_COOKIES ENV variable not found!");
 }
 
+// -----------------------------
 // Fetch video info as JSON
+// -----------------------------
 export async function getVideoInfo(url) {
   try {
     const options = {
@@ -27,9 +31,12 @@ export async function getVideoInfo(url) {
       addHeader: ["referer:youtube.com", "user-agent:googlebot"],
     };
 
-    // ✅ Add cookies only if file exists
+    // ✅ Attach cookies if exist
     if (fs.existsSync(cookiesPath)) {
       options.cookies = cookiesPath;
+      console.log("✅ Using cookies for yt-dlp:", cookiesPath);
+    } else {
+      console.warn("⚠️ Cookies file not found, fetching may fail for restricted videos");
     }
 
     const json = await ytdlp(url, options);
@@ -46,11 +53,13 @@ export async function getVideoInfo(url) {
     };
   } catch (err) {
     console.error("YT-DLP INFO ERROR:", err);
-    throw new Error(`yt-dlp info failed: ${err.message}`);
+    throw new Error(`Failed to fetch info: ${err.message}`);
   }
 }
 
+// -----------------------------
 // Stream download directly to HTTP response
+// -----------------------------
 export async function streamDownload({ url, format = "best" }, res) {
   try {
     const options = {
@@ -62,13 +71,15 @@ export async function streamDownload({ url, format = "best" }, res) {
       addHeader: ["referer:youtube.com", "user-agent:googlebot"],
     };
 
-    // ✅ Add cookies only if file exists
+    // ✅ Attach cookies if exist
     if (fs.existsSync(cookiesPath)) {
       options.cookies = cookiesPath;
+      console.log("✅ Using cookies for download:", cookiesPath);
+    } else {
+      console.warn("⚠️ Cookies file not found, download may fail for restricted videos");
     }
 
     const proc = ytdlp(url, options);
-
     proc.stdout.pipe(res);
 
     proc.stderr.on("data", (chunk) => {
@@ -87,6 +98,6 @@ export async function streamDownload({ url, format = "best" }, res) {
     });
   } catch (err) {
     console.error("YT-DLP DOWNLOAD ERROR:", err);
-    throw new Error(`yt-dlp download failed: ${err.message}`);
+    throw new Error(`Failed to download: ${err.message}`);
   }
 }
