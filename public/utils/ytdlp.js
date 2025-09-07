@@ -3,25 +3,36 @@ import ytdlp from "yt-dlp-exec";
 import ffmpegPath from "ffmpeg-static";
 import fs from "fs";
 
+// ✅ Use /tmp (Render & Vercel la writable path)
 const cookiesPath = "/tmp/cookies.txt";
 
-// ✅ When running on Render / Vercel, write cookies.txt from ENV variable
+// ✅ Write cookies.txt from ENV variable if available
 if (process.env.YOUTUBE_COOKIES) {
-  fs.writeFileSync("./cookies.txt", process.env.YOUTUBE_COOKIES);
+  try {
+    fs.writeFileSync(cookiesPath, process.env.YOUTUBE_COOKIES);
+    console.log("✅ Cookies file written to", cookiesPath);
+  } catch (err) {
+    console.error("❌ Failed to write cookies file:", err.message);
+  }
 }
 
 // Fetch video info as JSON
 export async function getVideoInfo(url) {
   try {
-    const json = await ytdlp(url, {
+    const options = {
       dumpSingleJson: true,
       noWarnings: true,
       noCallHome: true,
       ffmpegLocation: ffmpegPath,
       addHeader: ["referer:youtube.com", "user-agent:googlebot"],
-      cookies: cookiesPath, // ✅ use /tmp/cookies.txt
-    });
+    };
 
+    // ✅ Add cookies only if file exists
+    if (fs.existsSync(cookiesPath)) {
+      options.cookies = cookiesPath;
+    }
+
+    const json = await ytdlp(url, options);
     const primary = json?.entries?.length ? json.entries[0] : json;
 
     return {
@@ -42,15 +53,21 @@ export async function getVideoInfo(url) {
 // Stream download directly to HTTP response
 export async function streamDownload({ url, format = "best" }, res) {
   try {
-    const proc = ytdlp(url, {
+    const options = {
       format,
       ffmpegLocation: ffmpegPath,
       o: "-", // output to stdout
       noWarnings: true,
       noCallHome: true,
       addHeader: ["referer:youtube.com", "user-agent:googlebot"],
-      cookies: cookiesPath, // ✅ use /tmp/cookies.txt
-    });
+    };
+
+    // ✅ Add cookies only if file exists
+    if (fs.existsSync(cookiesPath)) {
+      options.cookies = cookiesPath;
+    }
+
+    const proc = ytdlp(url, options);
 
     proc.stdout.pipe(res);
 
