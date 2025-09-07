@@ -2,10 +2,13 @@
 import ytdlp from "yt-dlp-exec";
 import ffmpegPath from "ffmpeg-static";
 import fs from "fs";
+import path from "path";
 
-// ✅ When running on Render / Vercel, write cookies.txt from ENV variable
+// ✅ Always write cookies to /tmp (safe in Render/Vercel)
+const cookiesPath = path.join("/tmp", "cookies.txt");
+
 if (process.env.YOUTUBE_COOKIES) {
-  fs.writeFileSync("cookies.txt", process.env.YOUTUBE_COOKIES);
+  fs.writeFileSync(cookiesPath, process.env.YOUTUBE_COOKIES);
 }
 
 // Fetch video info as JSON
@@ -17,7 +20,7 @@ export async function getVideoInfo(url) {
       noCallHome: true,
       ffmpegLocation: ffmpegPath,
       addHeader: ["referer:youtube.com", "user-agent:googlebot"],
-      cookies: "cookies.txt", // ✅ use cookies
+      cookies: cookiesPath, // ✅ use cookies in /tmp
     });
 
     const primary = json?.entries?.length ? json.entries[0] : json;
@@ -47,7 +50,7 @@ export async function streamDownload({ url, format = "best" }, res) {
       noWarnings: true,
       noCallHome: true,
       addHeader: ["referer:youtube.com", "user-agent:googlebot"],
-      cookies: "cookies.txt", // ✅ use cookies
+      cookies: cookiesPath, // ✅ use cookies in /tmp
     });
 
     proc.stdout.pipe(res);
@@ -65,9 +68,3 @@ export async function streamDownload({ url, format = "best" }, res) {
         }
       });
       proc.on("error", reject);
-    });
-  } catch (err) {
-    console.error("YT-DLP DOWNLOAD ERROR:", err);
-    throw new Error(`yt-dlp download failed: ${err.message}`);
-  }
-}
