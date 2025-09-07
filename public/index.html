@@ -39,20 +39,27 @@
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 
-  <!-- Tailwind CDN (fast and simple). Tighten CSP later if self-hosting) -->
+  <!-- Google Fonts & Tailwind -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
-      theme: { extend: { fontFamily: { sans: ['Inter', 'ui-sans-serif', 'system-ui'] } } }
+      theme: { 
+        extend: { 
+          fontFamily: { sans: ['Poppins', 'ui-sans-serif', 'system-ui'] } 
+        } 
+      }
     }
   </script>
 </head>
 <body class="bg-gray-50 text-gray-900 antialiased">
-  <header class="sticky top-0 backdrop-blur bg-white/70 border-b border-gray-100">
+
+  <!-- Header -->
+  <header class="sticky top-0 backdrop-blur bg-white/70 border-b border-gray-100 z-50">
     <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
-      <a href="/" class="flex items-center gap-2">
-        <img src="/favicon.svg" class="h-7 w-7" alt="QuickDownload logo">
-        <span class="font-semibold tracking-tight">QuickDownload</span>
+      <a href="/" class="flex items-center gap-3">
+        <img src="/favicon.svg" class="h-8 w-8" alt="QuickDownload logo">
+        <span class="text-lg font-bold tracking-tight">QuickDownload</span>
       </a>
       <nav class="flex items-center gap-5 text-sm">
         <a class="hover:underline" href="/terms.html">Terms</a>
@@ -61,23 +68,23 @@
     </div>
   </header>
 
+  <!-- Main Hero -->
   <main>
-    <!-- Hero -->
     <section class="relative">
       <div class="max-w-5xl mx-auto px-4 py-16 lg:py-24">
-        <div class="text-center">
-          <h1 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight">
+        <div class="text-center max-w-3xl mx-auto">
+          <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-tight tracking-tight">
             Paste link → <span class="bg-gradient-to-r from-indigo-600 to-blue-600 bg-clip-text text-transparent">Download HD</span>
           </h1>
-          <p class="mt-4 text-gray-600 max-w-2xl mx-auto">YouTube, Instagram, Facebook, TikTok & more. Original quality. No signup. 100% free for a limited time.</p>
+          <p class="mt-5 text-lg text-gray-600">YouTube, Instagram, Facebook, TikTok & more. Original quality. No signup. 100% free for a limited time.</p>
         </div>
 
         <!-- Input Card -->
         <div class="mt-8 bg-white shadow-xl shadow-gray-200/30 rounded-2xl p-4 md:p-6">
           <form id="dl-form" class="flex flex-col md:flex-row gap-3">
-            <input id="url" type="url" required placeholder="Paste video link here (YouTube, Instagram, Facebook, TikTok...)" class="flex-1 rounded-xl border border-gray-200 px-4 py-3 outline-none focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500" />
-            <button id="checkBtn" class="rounded-xl px-5 py-3 bg-indigo-600 text-white font-semibold hover:bg-indigo-700 focus:ring-4 focus:ring-indigo-200">Check</button>
-            <button id="downloadBtn" class="rounded-xl px-5 py-3 bg-gray-900 text-white font-semibold hover:bg-black focus:ring-4 focus:ring-gray-200" disabled>Download</button>
+            <input id="url" type="url" required placeholder="Paste video link here (YouTube, Instagram, Facebook, TikTok...)" class="flex-1 rounded-xl border border-gray-200 px-4 py-3 outline-none focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 text-sm" />
+            <button id="checkBtn" class="rounded-xl px-5 py-3 bg-indigo-600 text-white font-semibold hover:bg-indigo-700 focus:ring-4 focus:ring-indigo-200 transition-all">Check</button>
+            <button id="downloadBtn" class="rounded-xl px-5 py-3 bg-gray-900 text-white font-semibold hover:bg-black focus:ring-4 focus:ring-gray-200 transition-all" disabled>Download</button>
           </form>
 
           <!-- Preview -->
@@ -93,24 +100,32 @@
         </div>
 
         <!-- Logos row -->
-        <div class="mt-10 grid grid-cols-2 sm:grid-cols-4 gap-4 text-center text-sm text-gray-600">
-          <div class="p-3 rounded-xl border bg-white">YouTube</div>
-          <div class="p-3 rounded-xl border bg-white">Instagram</div>
-          <div class="p-3 rounded-xl border bg-white">Facebook</div>
-          <div class="p-3 rounded-xl border bg-white">TikTok</div>
+        <div class="mt-10 grid grid-cols-2 sm:grid-cols-4 gap-4 text-center text-sm font-medium text-gray-700">
+          <div class="flex items-center justify-center gap-2 p-3 rounded-xl border bg-white shadow-sm">
+            <img src="/icons/youtube.svg" class="h-5" alt="YouTube"> YouTube
+          </div>
+          <div class="flex items-center justify-center gap-2 p-3 rounded-xl border bg-white shadow-sm">
+            <img src="/icons/instagram.svg" class="h-5" alt="Instagram"> Instagram
+          </div>
+          <div class="flex items-center justify-center gap-2 p-3 rounded-xl border bg-white shadow-sm">
+            <img src="/icons/facebook.svg" class="h-5" alt="Facebook"> Facebook
+          </div>
+          <div class="flex items-center justify-center gap-2 p-3 rounded-xl border bg-white shadow-sm">
+            <img src="/icons/tiktok.svg" class="h-5" alt="TikTok"> TikTok
+          </div>
         </div>
 
         <!-- Why choose us -->
         <div class="mt-14 grid md:grid-cols-3 gap-6">
-          <div class="bg-white rounded-2xl border p-6">
+          <div class="bg-white rounded-2xl border p-6 shadow-sm">
             <h3 class="font-semibold">Original Quality</h3>
             <p class="mt-2 text-sm text-gray-600">Streams best available format via yt-dlp.</p>
           </div>
-          <div class="bg-white rounded-2xl border p-6">
+          <div class="bg-white rounded-2xl border p-6 shadow-sm">
             <h3 class="font-semibold">Fast & Lightweight</h3>
             <p class="mt-2 text-sm text-gray-600">Minimal JS, Tailwind CDN, server compression.</p>
           </div>
-          <div class="bg-white rounded-2xl border p-6">
+          <div class="bg-white rounded-2xl border p-6 shadow-sm">
             <h3 class="font-semibold">No Sign‑up</h3>
             <p class="mt-2 text-sm text-gray-600">Free to use. Ads/Pro later.</p>
           </div>
@@ -119,10 +134,11 @@
     </section>
   </main>
 
+  <!-- Footer -->
   <footer class="border-t bg-white">
-    <div class="max-w-5xl mx-auto px-4 py-8 text-sm text-gray-500 flex items-center justify-between">
+    <div class="max-w-5xl mx-auto px-4 py-8 flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-gray-500">
       <p>© <span id="year"></span> QuickDownload. All rights reserved.</p>
-      <div class="flex gap-4">
+      <div class="flex gap-5">
         <a class="hover:underline" href="/terms.html">Terms</a>
         <a class="hover:underline" href="/privacy.html">Privacy</a>
       </div>
