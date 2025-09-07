@@ -7,7 +7,7 @@ const cookiesPath = "/tmp/cookies.txt";
 
 // ✅ When running on Render / Vercel, write cookies.txt from ENV variable
 if (process.env.YOUTUBE_COOKIES) {
-  fs.writeFileSync(cookiesPath, process.env.YOUTUBE_COOKIES);
+  fs.writeFileSync("./cookies.txt", process.env.YOUTUBE_COOKIES);
 }
 
 // Fetch video info as JSON
