@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>QuickDownload — Fast HD Social Media Downloader (Owner‑Authorized)</title>
+  <title>QuickDownload — Fast HD Social Media Downloader</title>
   <meta name="description" content="Download original-quality videos from YouTube, Instagram, Facebook, TikTok and more. Free, fast, and secure. No signup.">
   <meta name="robots" content="index,follow">
   <link rel="canonical" href="/" />
@@ -44,24 +44,23 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
-      theme: { 
-        extend: { 
-          fontFamily: { sans: ['Poppins', 'ui-sans-serif', 'system-ui'] } 
-        } 
-      }
+      darkMode: 'class',
+      theme: { extend: { fontFamily: { sans: ['Poppins', 'ui-sans-serif', 'system-ui'] } } }
     }
   </script>
 </head>
-<body class="bg-gray-50 text-gray-900 antialiased">
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 antialiased">
 
   <!-- Header -->
-  <header class="sticky top-0 backdrop-blur bg-white/70 border-b border-gray-100 z-50">
+  <header class="sticky top-0 backdrop-blur bg-white/70 dark:bg-gray-800/70 border-b border-gray-100 dark:border-gray-700 z-50">
     <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
       <a href="/" class="flex items-center gap-3">
         <img src="/favicon.svg" class="h-8 w-8" alt="QuickDownload logo">
         <span class="text-lg font-bold tracking-tight">QuickDownload</span>
       </a>
       <nav class="flex items-center gap-5 text-sm">
+        <button id="langToggle" class="hover:underline">தமிழ்</button>
+        <button id="darkToggle" class="hover:underline">🌙</button>
         <a class="hover:underline" href="/terms.html">Terms</a>
         <a class="hover:underline" href="/privacy.html">Privacy</a>
       </nav>
@@ -74,25 +73,46 @@
       <div class="max-w-5xl mx-auto px-4 py-16 lg:py-24">
         <div class="text-center max-w-3xl mx-auto">
           <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-tight tracking-tight">
-            Paste link → <span class="bg-gradient-to-r from-indigo-600 to-blue-600 bg-clip-text text-transparent">Download HD</span>
+            <span id="heroText">Paste link →</span>
+            <span class="bg-gradient-to-r from-indigo-600 to-blue-600 bg-clip-text text-transparent">Download HD</span>
           </h1>
-          <p class="mt-5 text-lg text-gray-600">YouTube, Instagram, Facebook, TikTok & more. Original quality. No signup. 100% free for a limited time.</p>
+          <p class="mt-5 text-lg text-gray-600 dark:text-gray-300" id="subText">
+            YouTube, Instagram, Facebook, TikTok & more. Original quality. No signup. 100% free for a limited time.
+          </p>
         </div>
 
         <!-- Input Card -->
-        <div class="mt-8 bg-white shadow-xl shadow-gray-200/30 rounded-2xl p-4 md:p-6">
+        <div class="mt-8 bg-white dark:bg-gray-800 shadow-xl shadow-gray-200/30 dark:shadow-black/20 rounded-2xl p-4 md:p-6">
           <form id="dl-form" class="flex flex-col md:flex-row gap-3">
-            <input id="url" type="url" required placeholder="Paste video link here (YouTube, Instagram, Facebook, TikTok...)" class="flex-1 rounded-xl border border-gray-200 px-4 py-3 outline-none focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 text-sm" />
+            <input id="url" type="url" required placeholder="Paste video link here..." class="flex-1 rounded-xl border border-gray-200 dark:border-gray-700 px-4 py-3 outline-none focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 dark:bg-gray-900 dark:text-white text-sm" />
+            
+            <!-- Quality Selector -->
+            <select id="quality" class="rounded-xl border border-gray-200 dark:border-gray-700 px-3 py-3 text-sm dark:bg-gray-900 dark:text-white">
+              <option value="best">Best</option>
+              <option value="720p">720p</option>
+              <option value="480p">480p</option>
+              <option value="audio">Audio Only (mp3)</option>
+            </select>
+
             <button id="checkBtn" class="rounded-xl px-5 py-3 bg-indigo-600 text-white font-semibold hover:bg-indigo-700 focus:ring-4 focus:ring-indigo-200 transition-all">Check</button>
             <button id="downloadBtn" class="rounded-xl px-5 py-3 bg-gray-900 text-white font-semibold hover:bg-black focus:ring-4 focus:ring-gray-200 transition-all" disabled>Download</button>
           </form>
 
+          <!-- Loader -->
+          <div id="loader" class="hidden mt-4 text-indigo-600 text-sm flex items-center gap-2">
+            <svg class="animate-spin h-5 w-5 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+            </svg>
+            Checking video…
+          </div>
+
           <!-- Preview -->
           <div id="preview" class="hidden mt-6 grid grid-cols-1 sm:grid-cols-[120px,1fr] gap-4 items-center">
-            <img id="thumb" src="" alt="Preview" class="w-30 h-20 object-cover rounded-xl border border-gray-200"/>
+            <img id="thumb" src="" alt="Preview" class="w-30 h-20 object-cover rounded-xl border border-gray-200 dark:border-gray-700"/>
             <div>
               <h3 id="title" class="font-semibold line-clamp-2"></h3>
-              <p id="meta" class="text-sm text-gray-500"></p>
+              <p id="meta" class="text-sm text-gray-500 dark:text-gray-400"></p>
             </div>
           </div>
 
@@ -100,34 +120,18 @@
         </div>
 
         <!-- Logos row -->
-        <div class="mt-10 grid grid-cols-2 sm:grid-cols-4 gap-4 text-center text-sm font-medium text-gray-700">
-          <div class="flex items-center justify-center gap-2 p-3 rounded-xl border bg-white shadow-sm">
+        <div class="mt-10 grid grid-cols-2 sm:grid-cols-4 gap-4 text-center text-sm font-medium text-gray-700 dark:text-gray-300">
+          <div class="flex items-center justify-center gap-2 p-3 rounded-xl border bg-white dark:bg-gray-800 shadow-sm">
             <img src="/icons/youtube.svg" class="h-5" alt="YouTube"> YouTube
           </div>
-          <div class="flex items-center justify-center gap-2 p-3 rounded-xl border bg-white shadow-sm">
+          <div class="flex items-center justify-center gap-2 p-3 rounded-xl border bg-white dark:bg-gray-800 shadow-sm">
             <img src="/icons/instagram.svg" class="h-5" alt="Instagram"> Instagram
           </div>
-          <div class="flex items-center justify-center gap-2 p-3 rounded-xl border bg-white shadow-sm">
+          <div class="flex items-center justify-center gap-2 p-3 rounded-xl border bg-white dark:bg-gray-800 shadow-sm">
             <img src="/icons/facebook.svg" class="h-5" alt="Facebook"> Facebook
           </div>
-          <div class="flex items-center justify-center gap-2 p-3 rounded-xl border bg-white shadow-sm">
+          <div class="flex items-center justify-center gap-2 p-3 rounded-xl border bg-white dark:bg-gray-800 shadow-sm">
             <img src="/icons/tiktok.svg" class="h-5" alt="TikTok"> TikTok
-          </div>
-        </div>
-
-        <!-- Why choose us -->
-        <div class="mt-14 grid md:grid-cols-3 gap-6">
-          <div class="bg-white rounded-2xl border p-6 shadow-sm">
-            <h3 class="font-semibold">Original Quality</h3>
-            <p class="mt-2 text-sm text-gray-600">Streams best available format via yt-dlp.</p>
-          </div>
-          <div class="bg-white rounded-2xl border p-6 shadow-sm">
-            <h3 class="font-semibold">Fast & Lightweight</h3>
-            <p class="mt-2 text-sm text-gray-600">Minimal JS, Tailwind CDN, server compression.</p>
-          </div>
-          <div class="bg-white rounded-2xl border p-6 shadow-sm">
-            <h3 class="font-semibold">No Sign‑up</h3>
-            <p class="mt-2 text-sm text-gray-600">Free to use. Ads/Pro later.</p>
           </div>
         </div>
       </div>
@@ -135,8 +139,8 @@
   </main>
 
   <!-- Footer -->
-  <footer class="border-t bg-white">
-    <div class="max-w-5xl mx-auto px-4 py-8 flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-gray-500">
+  <footer class="border-t bg-white dark:bg-gray-800">
+    <div class="max-w-5xl mx-auto px-4 py-8 flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-gray-500 dark:text-gray-400">
       <p>© <span id="year"></span> QuickDownload. All rights reserved.</p>
       <div class="flex gap-5">
         <a class="hover:underline" href="/terms.html">Terms</a>
@@ -146,5 +150,32 @@
   </footer>
 
   <script src="/js/app.js" defer></script>
+  <script>
+    // Dark Mode Toggle
+    document.getElementById("darkToggle").addEventListener("click", () => {
+      document.documentElement.classList.toggle("dark");
+    });
+
+    // Language Toggle (English <-> Tamil)
+    const langToggle = document.getElementById("langToggle");
+    const heroText = document.getElementById("heroText");
+    const subText = document.getElementById("subText");
+    let isTamil = false;
+    langToggle.addEventListener("click", () => {
+      isTamil = !isTamil;
+      if(isTamil){
+        langToggle.textContent = "English";
+        heroText.textContent = "லிங்க் ஒட்டு →";
+        subText.textContent = "YouTube, Instagram, Facebook, TikTok & மேலும். அசல் தரம். பதிவு தேவையில்லை. 100% இலவசம்.";
+      } else {
+        langToggle.textContent = "தமிழ்";
+        heroText.textContent = "Paste link →";
+        subText.textContent = "YouTube, Instagram, Facebook, TikTok & more. Original quality. No signup. 100% free for a limited time.";
+      }
+    });
+
+    // Footer year
+    document.getElementById("year").textContent = new Date().getFullYear();
+  </script>
 </body>
 </html>
