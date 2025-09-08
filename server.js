@@ -22,6 +22,11 @@ app.use(morgan("dev"));
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "public")));
 
+// Health check
+app.get("/api/health", (req, res) => {
+  res.json({ ok: true, uptime: process.uptime() });
+});
+
 // API → Get video info
 app.post("/api/info", async (req, res) => {
   try {
@@ -42,7 +47,7 @@ app.post("/api/download", async (req, res) => {
     const { url, format } = req.body;
     if (!url) return res.status(400).json({ error: "Missing video URL" });
 
-    const filePath = await downloadVideo(url, format || "mp4");
+    const filePath = await downloadVideo(url, format || "best");
 
     res.download(filePath, (err) => {
       if (err) console.error("Download error:", err);
@@ -51,6 +56,11 @@ app.post("/api/download", async (req, res) => {
     console.error("YT-DLP DOWNLOAD ERROR:", err.message);
     res.status(500).json({ error: "Failed to download video", details: err.message });
   }
+});
+
+// Fallback to frontend
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
 // Start server
