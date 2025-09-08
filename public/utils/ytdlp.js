@@ -3,19 +3,29 @@ import ytdlp from "yt-dlp-exec";
 import ffmpegPath from "ffmpeg-static";
 import fs from "fs";
 
-// ✅ Render & Vercel writable path
+// -----------------------------
+// ✅ Render & Vercel writable path for cookies
+// -----------------------------
 const cookiesPath = "/tmp/cookies.txt";
 
-// ✅ Write cookies.txt from ENV variable if available
+// Write cookies.txt from ENV variable if available
 if (process.env.YOUTUBE_COOKIES) {
   try {
-    fs.writeFileSync(cookiesPath, process.env.YOUTUBE_COOKIES);
+    fs.writeFileSync(cookiesPath, process.env.YOUTUBE_COOKIES.trim());
     console.log("✅ Cookies file written to", cookiesPath);
+
+    // Quick validation
+    const content = fs.readFileSync(cookiesPath, "utf-8");
+    if (!content.includes("# Netscape HTTP Cookie File")) {
+      console.warn(
+        "⚠️ Cookies file does not contain the expected Netscape format header. Fetch may fail for restricted videos!"
+      );
+    }
   } catch (err) {
     console.error("❌ Failed to write cookies file:", err.message);
   }
 } else {
-  console.warn("⚠️ YOUTUBE_COOKIES ENV variable not found!");
+  console.warn("⚠️ YOUTUBE_COOKIES ENV variable not found! Proceeding without cookies.");
 }
 
 // -----------------------------
@@ -31,12 +41,12 @@ export async function getVideoInfo(url) {
       addHeader: ["referer:youtube.com", "user-agent:googlebot"],
     };
 
-    // ✅ Attach cookies if exist
+    // Attach cookies if exist
     if (fs.existsSync(cookiesPath)) {
       options.cookies = cookiesPath;
-      console.log("✅ Using cookies for yt-dlp:", cookiesPath);
+      console.log("✅ Using cookies for yt-dlp info fetch:", cookiesPath);
     } else {
-      console.warn("⚠️ Cookies file not found, fetching may fail for restricted videos");
+      console.log("ℹ️ No cookies file found. Will try fetching public video info.");
     }
 
     const json = await ytdlp(url, options);
@@ -52,7 +62,7 @@ export async function getVideoInfo(url) {
       is_playlist: Boolean(json?.entries?.length),
     };
   } catch (err) {
-    console.error("YT-DLP INFO ERROR:", err);
+    console.error("YT-DLP INFO ERROR:", err.stderr || err.message);
     throw new Error(`Failed to fetch info: ${err.message}`);
   }
 }
@@ -71,12 +81,12 @@ export async function streamDownload({ url, format = "best" }, res) {
       addHeader: ["referer:youtube.com", "user-agent:googlebot"],
     };
 
-    // ✅ Attach cookies if exist
+    // Attach cookies if exist
     if (fs.existsSync(cookiesPath)) {
       options.cookies = cookiesPath;
-      console.log("✅ Using cookies for download:", cookiesPath);
+      console.log("✅ Using cookies for yt-dlp download:", cookiesPath);
     } else {
-      console.warn("⚠️ Cookies file not found, download may fail for restricted videos");
+      console.log("ℹ️ No cookies file found. Downloading public videos only.");
     }
 
     const proc = ytdlp(url, options);
@@ -97,7 +107,7 @@ export async function streamDownload({ url, format = "best" }, res) {
       proc.on("error", reject);
     });
   } catch (err) {
-    console.error("YT-DLP DOWNLOAD ERROR:", err);
+    console.error("YT-DLP DOWNLOAD ERROR:", err.message);
     throw new Error(`Failed to download: ${err.message}`);
   }
 }
