@@ -52,6 +52,7 @@ async function getVideoInfo(url) {
       addHeader: ["referer:youtube.com", "user-agent:googlebot"],
       preferFreeFormats: true,
       yesPlaylist: true
+      // ✅ Removed unsupported options like https-timeout
     };
     if (fs.existsSync(cookiesPath)) options.cookies = cookiesPath;
 
@@ -86,6 +87,7 @@ async function streamDownload({ url, format }, res) {
       noWarnings: true,
       noCallHome: true,
       addHeader: ["referer:youtube.com", "user-agent:googlebot"]
+      // ✅ No unsupported options here
     };
     if (fs.existsSync(cookiesPath)) options.cookies = cookiesPath;
 
