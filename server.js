@@ -2,16 +2,16 @@
 import express from "express";
 import path from "path";
 import { fileURLToPath } from "url";
-import fs from "fs";
-import dotenv from "dotenv";
-import ytdlp from "yt-dlp-exec";
-import ffmpegPath from "ffmpeg-static";
 import cors from "cors";
 import helmet from "helmet";
 import compression from "compression";
 import morgan from "morgan";
+import dotenv from "dotenv";
+import ytdlp from "yt-dlp-exec";
+import fs from "fs";
 
 dotenv.config();
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -26,21 +26,24 @@ app.use(helmet());
 app.use(compression());
 app.use(morgan("dev"));
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 
 // -----------------------------
-// Cookies for restricted videos
+// Cookies setup (optional)
 // -----------------------------
 const cookiesPath = "/tmp/cookies.txt";
 if (process.env.YOUTUBE_COOKIES) {
-  fs.writeFileSync(cookiesPath, process.env.YOUTUBE_COOKIES);
-  console.log("✅ Cookies file written to", cookiesPath);
+  try {
+    fs.writeFileSync(cookiesPath, process.env.YOUTUBE_COOKIES);
+    console.log("✅ Cookies file written to", cookiesPath);
+  } catch (err) {
+    console.error("❌ Failed to write cookies file:", err.message);
+  }
 } else {
-  console.warn("⚠️ YOUTUBE_COOKIES ENV variable missing!");
+  console.warn("⚠️ YOUTUBE_COOKIES ENV variable not found. Restricted videos may fail.");
 }
 
 // -----------------------------
-// Get video info
+// Get Video Info
 // -----------------------------
 async function getVideoInfo(url) {
   try {
@@ -48,11 +51,8 @@ async function getVideoInfo(url) {
       dumpSingleJson: true,
       noWarnings: true,
       noCallHome: true,
-      ffmpegLocation: ffmpegPath,
-      addHeader: ["referer:youtube.com", "user-agent:googlebot"],
       preferFreeFormats: true,
-      yesPlaylist: true
-      // ✅ Removed unsupported options like https-timeout
+      addHeader: ["referer:youtube.com", "user-agent:googlebot"],
     };
     if (fs.existsSync(cookiesPath)) options.cookies = cookiesPath;
 
@@ -65,48 +65,59 @@ async function getVideoInfo(url) {
       duration: primary?.duration || null,
       uploader: primary?.uploader || primary?.channel || "",
       webpage_url: primary?.webpage_url || url,
-      formats: primary?.formats || [],
       extractor: primary?.extractor || json?.extractor,
-      is_playlist: Boolean(json?.entries?.length)
+      is_playlist: Boolean(json?.entries?.length),
     };
   } catch (err) {
-    console.error("YT-DLP INFO ERROR:", err);
-    throw new Error(err.message);
+    console.error("YT-DLP INFO ERROR:", err.message);
+    throw new Error(`Failed to fetch info: ${err.message}`);
   }
 }
 
 // -----------------------------
-// Stream download
+// Stream Download
 // -----------------------------
-async function streamDownload({ url, format }, res) {
+async function streamDownload({ url, format = "best" }, res) {
   return new Promise((resolve, reject) => {
     const options = {
-      format: format || "best",
+      format,
       o: "-",
-      ffmpegLocation: ffmpegPath,
       noWarnings: true,
       noCallHome: true,
-      addHeader: ["referer:youtube.com", "user-agent:googlebot"]
-      // ✅ No unsupported options here
+      addHeader: ["referer:youtube.com", "user-agent:googlebot"],
     };
     if (fs.existsSync(cookiesPath)) options.cookies = cookiesPath;
 
     const proc = ytdlp(url, options);
     proc.stdout.pipe(res);
-    proc.stderr.on("data", (chunk) => console.error("YT-DLP STDERR:", chunk.toString()));
-    proc.on("close", (code) => code !== 0 ? reject(new Error(`yt-dlp exited with code ${code}`)) : resolve());
+
+    proc.stderr.on("data", (chunk) => {
+      console.error("YT-DLP STDERR:", chunk.toString());
+    });
+
+    proc.on("close", (code) => {
+      if (code !== 0) reject(new Error(`yt-dlp exited with code ${code}`));
+      else resolve();
+    });
+
     proc.on("error", reject);
   });
 }
 
 // -----------------------------
-// API Routes
+// Health Check
 // -----------------------------
-app.get("/api/health", (req, res) => res.json({ ok: true, uptime: process.uptime() }));
+app.get("/api/health", (req, res) => {
+  res.json({ ok: true, uptime: process.uptime() });
+});
 
+// -----------------------------
+// Info Endpoint
+// -----------------------------
 app.post("/api/info", async (req, res) => {
   const { url } = req.body || {};
   if (!url) return res.status(400).json({ error: "Missing URL" });
+
   try {
     const info = await getVideoInfo(url);
     res.json(info);
@@ -115,13 +126,18 @@ app.post("/api/info", async (req, res) => {
   }
 });
 
+// -----------------------------
+// Download Endpoint
+// -----------------------------
 app.get("/api/download", async (req, res) => {
-  const { url, format } = req.query;
+  const { url, format = "best" } = req.query;
   if (!url) return res.status(400).json({ error: "Missing URL" });
+
   try {
     const safeName = "video";
     res.setHeader("Content-Disposition", `attachment; filename="${safeName}.mp4"`);
     res.setHeader("Content-Type", "application/octet-stream");
+
     await streamDownload({ url, format }, res);
   } catch (err) {
     console.error("DOWNLOAD ERROR:", err.message);
@@ -131,12 +147,16 @@ app.get("/api/download", async (req, res) => {
 });
 
 // -----------------------------
-// Serve frontend
+// Serve Frontend
 // -----------------------------
 app.use(express.static(path.join(__dirname, "public")));
-app.get("*", (req, res) => res.sendFile(path.join(__dirname, "public", "index.html")));
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
+});
 
 // -----------------------------
-// Start server
+// Start Server
 // -----------------------------
-app.listen(PORT, "0.0.0.0", () => console.log(`✔ Server running on http://0.0.0.0:${PORT}`));
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`✔ Server running on http://0.0.0.0:${PORT}`);
+});
