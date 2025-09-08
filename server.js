@@ -8,6 +8,7 @@ import compression from "compression";
 import morgan from "morgan";
 import dotenv from "dotenv";
 import ytdlp from "yt-dlp-exec";
+import ffmpegPath from "ffmpeg-static";
 import fs from "fs";
 
 dotenv.config();
@@ -30,17 +31,17 @@ app.use(express.json());
 // -----------------------------
 // Write cookies on startup
 // -----------------------------
-const cookiesPath = "/tmp/cookies.txt";
+const cookiesPath = process.env.YOUTUBE_COOKIES_PATH || path.join("/tmp", "cookies.txt");
 
 if (process.env.YOUTUBE_COOKIES) {
   try {
-    fs.writeFileSync(cookiesPath, process.env.YOUTUBE_COOKIES);
+    fs.writeFileSync(cookiesPath, process.env.YOUTUBE_COOKIES.trim());
     console.log("✅ Cookies file written to", cookiesPath);
   } catch (err) {
     console.error("❌ Failed to write cookies file:", err.message);
   }
 } else {
-  console.warn("⚠️ YOUTUBE_COOKIES ENV variable not found!");
+  console.warn("⚠️ YOUTUBE_COOKIES ENV variable not found! Restricted videos may fail.");
 }
 
 // -----------------------------
@@ -52,15 +53,14 @@ async function getVideoInfo(url) {
       dumpSingleJson: true,
       noWarnings: true,
       noCallHome: true,
-      preferFreeFormats: true,
       addHeader: ["referer:youtube.com", "user-agent:googlebot"],
+      ffmpegLocation: ffmpegPath,
+      httpsTimeout: 60000,
     };
 
     if (fs.existsSync(cookiesPath)) {
       options.cookies = cookiesPath;
       console.log("✅ Using cookies for info fetch");
-    } else {
-      console.warn("⚠️ Cookies file missing, info may fail for restricted videos");
     }
 
     const json = await ytdlp(url, options);
@@ -76,7 +76,7 @@ async function getVideoInfo(url) {
       is_playlist: Boolean(json?.entries?.length),
     };
   } catch (err) {
-    console.error("YT-DLP INFO ERROR:", err);
+    console.error("YT-DLP INFO ERROR:", err.stderr || err.message);
     throw new Error(`Failed to fetch info: ${err.message}`);
   }
 }
@@ -92,6 +92,8 @@ async function streamDownload({ url, format = "best" }, res) {
       noWarnings: true,
       noCallHome: true,
       addHeader: ["referer:youtube.com", "user-agent:googlebot"],
+      ffmpegLocation: ffmpegPath,
+      httpsTimeout: 60000,
     };
 
     if (fs.existsSync(cookiesPath)) {
@@ -103,9 +105,7 @@ async function streamDownload({ url, format = "best" }, res) {
 
     proc.stdout.pipe(res);
 
-    proc.stderr.on("data", (chunk) => {
-      console.error("YT-DLP STDERR:", chunk.toString());
-    });
+    proc.stderr.on("data", (chunk) => console.error("YT-DLP STDERR:", chunk.toString()));
 
     proc.on("close", (code) => {
       if (code !== 0) reject(new Error(`yt-dlp exited with code ${code}`));
