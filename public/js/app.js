@@ -1,65 +1,58 @@
-const $ = (sel) => document.querySelector(sel);
-const form = $('#dl-form');
-const urlInput = $('#url');
-const checkBtn = $('#checkBtn');
-const downloadBtn = $('#downloadBtn');
-const preview = $('#preview');
-const thumb = $('#thumb');
-const title = $('#title');
-const meta = $('#meta');
-const errorEl = $('#error');
-const loader = $('#loader');
-const qualitySelect = $('#quality');
+// /js/app.js
+const form = document.getElementById("dl-form");
+const urlInput = document.getElementById("url");
+const checkBtn = document.getElementById("checkBtn");
+const downloadBtn = document.getElementById("downloadBtn");
+const loader = document.getElementById("loader");
+const preview = document.getElementById("preview");
+const thumb = document.getElementById("thumb");
+const title = document.getElementById("title");
+const meta = document.getElementById("meta");
+const errorEl = document.getElementById("error");
+const qualitySelect = document.getElementById("quality");
 
-// Year in footer
-const y = document.getElementById('year');
-if (y) y.textContent = new Date().getFullYear();
+let currentInfo = null;
 
-form?.addEventListener('submit', async (e) => {
+form.addEventListener("submit", async (e) => {
   e.preventDefault();
-  errorEl.classList.add('hidden');
-  preview.classList.add('hidden');
-  downloadBtn.disabled = true;
-
   const url = urlInput.value.trim();
   if (!url) return;
 
-  checkBtn.disabled = true;
-  checkBtn.textContent = 'Checking…';
-  loader.classList.remove('hidden'); // show loader
+  loader.classList.remove("hidden");
+  preview.classList.add("hidden");
+  errorEl.classList.add("hidden");
+  downloadBtn.disabled = true;
 
   try {
-    const r = await fetch('/api/info', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ url })
+    const res = await fetch("/api/info", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url }),
     });
-    const info = await r.json();
-    if (!r.ok) throw new Error(info?.error || 'Failed');
 
-    // Populate preview
-    preview.classList.remove('hidden');
-    thumb.src = info.thumbnail || '';
-    title.textContent = info.title || 'Untitled';
-    meta.textContent = [
-      info.uploader,
-      info.duration ? `${Math.round(info.duration / 60)} min` : ''
-    ].filter(Boolean).join(' • ');
+    if (!res.ok) throw new Error("Failed to fetch video info");
+    const data = await res.json();
+    currentInfo = data;
 
-    // Enable download
+    thumb.src = data.thumbnail || "";
+    title.textContent = data.title || "Untitled";
+    meta.textContent = `Uploader: ${data.uploader || "Unknown"} | Duration: ${data.duration ? data.duration + "s" : "N/A"}`;
+    preview.classList.remove("hidden");
     downloadBtn.disabled = false;
-    downloadBtn.onclick = () => {
-      const selectedQuality = qualitySelect.value || 'best';
-      const dUrl = `/api/download?url=${encodeURIComponent(url)}&format=${selectedQuality}`;
-      window.location.href = dUrl;
-    };
   } catch (err) {
-    errorEl.textContent = err.message || 'Error fetching info';
-    errorEl.classList.remove('hidden');
-    preview.classList.add('hidden');
+    console.error(err);
+    errorEl.textContent = err.message || "Something went wrong!";
+    errorEl.classList.remove("hidden");
   } finally {
-    checkBtn.disabled = false;
-    checkBtn.textContent = 'Check';
-    loader.classList.add('hidden'); // hide loader
+    loader.classList.add("hidden");
   }
+});
+
+downloadBtn.addEventListener("click", () => {
+  if (!currentInfo) return;
+  const url = currentInfo.webpage_url;
+  const format = qualitySelect.value;
+  const a = document.createElement("a");
+  a.href = `/api/download?url=${encodeURIComponent(url)}&format=${encodeURIComponent(format)}`;
+  a.click();
 });
