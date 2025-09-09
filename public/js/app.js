@@ -47,6 +47,16 @@ langToggle.addEventListener("click", () => {
 document.getElementById("year").textContent = new Date().getFullYear();
 
 // -----------------------------
+// Format Duration
+// -----------------------------
+function formatDuration(seconds) {
+  if (!seconds) return "N/A";
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${mins}:${secs.toString().padStart(2, "0")}`;
+}
+
+// -----------------------------
 // Check Video Info
 // -----------------------------
 form.addEventListener("submit", async (e) => {
@@ -73,7 +83,7 @@ form.addEventListener("submit", async (e) => {
 
     thumb.src = data.thumbnail || "";
     title.textContent = data.title || "Untitled";
-    meta.textContent = `Uploader: ${data.uploader || "Unknown"} | Duration: ${data.duration ? data.duration + "s" : "N/A"}`;
+    meta.textContent = `Uploader: ${data.uploader || "Unknown"} | Duration: ${formatDuration(data.duration)}`;
 
     preview.classList.remove("hidden");
     downloadBtn.disabled = false;
@@ -105,14 +115,14 @@ downloadBtn.addEventListener("click", async () => {
       body: JSON.stringify({ url, format }),
     });
 
-    if (!res.ok) throw new Error("Download failed");
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Download failed");
 
-    const blob = await res.blob();
+    const blob = await fetch(data.filePath).then(r => r.blob());
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
-    a.download = `${currentInfo.title || "video"}.mp4`;
+    a.download = `${currentInfo.title || "video"}${format === "audio" ? ".mp3" : ".mp4"}`;
     a.click();
-
   } catch (err) {
     alert(err.message);
   } finally {
