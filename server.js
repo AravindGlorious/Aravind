@@ -5,7 +5,7 @@ import cors from "cors";
 import helmet from "helmet";
 import compression from "compression";
 import morgan from "morgan";
-import { getVideoInfo, downloadVideo } from ".public/utils/ytdlp.js";
+import { getVideoInfo, downloadVideo } from "./utils/ytdlp.js";
 
 const app = express();
 const PORT = process.env.PORT || 10000;
