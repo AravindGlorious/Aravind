@@ -21,12 +21,33 @@
   <meta name="twitter:description" content="Free, fast, secure HD downloads from YouTube, Instagram, Facebook, TikTok." />
   <meta name="twitter:image" content="/og-image.jpg" />
 
-  <!-- Local Tailwind CSS -->
-  <link rel="stylesheet" href="/css/tailwind.min.css">
+  <!-- Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "QuickDownload",
+    "url": "",
+    "applicationCategory": "Multimedia",
+    "operatingSystem": "Any",
+    "description": "Download original-quality videos from major social networks.",
+    "offers": {"@type": "Offer", "price": "0"}
+  }
+  </script>
 
   <!-- PWA basics -->
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+
+  <!-- Google Fonts & Tailwind -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: { extend: { fontFamily: { sans: ['Poppins', 'ui-sans-serif', 'system-ui'] } } }
+    }
+  </script>
 </head>
 <body class="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 antialiased">
 
@@ -142,7 +163,33 @@
     </div>
   </footer>
 
-  <!-- JS -->
   <script src="/js/app.js" defer></script>
+  <script>
+    // Dark Mode Toggle
+    document.getElementById("darkToggle").addEventListener("click", () => {
+      document.documentElement.classList.toggle("dark");
+    });
+
+    // Language Toggle
+    const langToggle = document.getElementById("langToggle");
+    const heroText = document.getElementById("heroText");
+    const subText = document.getElementById("subText");
+    let isTamil = false;
+    langToggle.addEventListener("click", () => {
+      isTamil = !isTamil;
+      if(isTamil){
+        langToggle.textContent = "English";
+        heroText.textContent = "லிங்க் ஒட்டு →";
+        subText.textContent = "YouTube, Instagram, Facebook, TikTok & மேலும். அசல் தரம். பதிவு தேவையில்லை. 100% இலவசம்.";
+      } else {
+        langToggle.textContent = "தமிழ்";
+        heroText.textContent = "Paste link →";
+        subText.textContent = "YouTube, Instagram, Facebook, TikTok & more. Original quality. No signup. 100% free for a limited time.";
+      }
+    });
+
+    // Footer year
+    document.getElementById("year").textContent = new Date().getFullYear();
+  </script>
 </body>
 </html>
