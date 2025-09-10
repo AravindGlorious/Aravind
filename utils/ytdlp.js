@@ -1,57 +1,77 @@
 // utils/ytdlp.js
-import { exec } from "child_process";
-import path from "path";
-import { fileURLToPath } from "url";
+import ytdlp from "yt-dlp-exec";
 import fs from "fs";
+import path from "path";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// cookies path
+const cookieFile = "/tmp/cookies.txt";
 
-function runCommand(command) {
-  return new Promise((resolve, reject) => {
-    exec(command, { maxBuffer: 1024 * 1024 * 20 }, (error, stdout, stderr) => {
-      if (error) return reject(error);
-      if (stderr) console.error("stderr:", stderr);
-      resolve(stdout);
+// downloads folder
+const downloadDir = path.join(process.cwd(), "downloads");
+
+// Ensure downloads dir exists
+if (!fs.existsSync(downloadDir)) {
+  fs.mkdirSync(downloadDir);
+}
+
+// Function to clean old files (>1 hour old)
+function cleanOldFiles() {
+  fs.readdir(downloadDir, (err, files) => {
+    if (err) return;
+    files.forEach((file) => {
+      const filePath = path.join(downloadDir, file);
+      fs.stat(filePath, (err, stats) => {
+        if (err) return;
+        const now = Date.now();
+        const age = now - stats.mtimeMs;
+        if (age > 60 * 60 * 1000) {
+          // older than 1 hour
+          fs.unlink(filePath, () => {});
+        }
+      });
     });
   });
 }
 
-// -----------------------------
-// Get Video Info
-// -----------------------------
-export async function getVideoInfo(url, cookieFile) {
-  const command = `yt-dlp "${url}" \
-    --dump-single-json \
-    --no-warnings \
-    --no-call-home \
-    --prefer-free-formats \
-    --user-agent "Mozilla/5.0" \
-    ${cookieFile ? `--cookies ${cookieFile}` : ""}`;
+// Run cleanup every 30 mins
+setInterval(cleanOldFiles, 30 * 60 * 1000);
 
-  const output = await runCommand(command);
-  return JSON.parse(output);
+// Main function
+export async function downloadInfo(url) {
+  try {
+    const info = await ytdlp(url, {
+      dumpSingleJson: true,
+      noWarnings: true,
+      noCallHome: true,
+      preferFreeFormats: true,
+      userAgent:
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36",
+      cookies: cookieFile, // ✅ cookies file
+    });
+    return info;
+  } catch (error) {
+    console.error("yt-dlp error:", error.message);
+    throw error;
+  }
 }
 
-// -----------------------------
-// Download Video
-// -----------------------------
-export async function downloadVideo(url, format, cookieFile) {
-  const outDir = path.join(__dirname, "../downloads");
-  if (!fs.existsSync(outDir)) fs.mkdirSync(outDir);
-
-  const filePath = path.join(outDir, `video-${Date.now()}.%(ext)s`);
-
-  const command = `yt-dlp -f "${format}" \
-    -o "${filePath}" \
-    "${url}" \
-    --no-warnings \
-    --no-call-home \
-    --user-agent "Mozilla/5.0" \
-    ${cookieFile ? `--cookies ${cookieFile}` : ""}`;
-
-  await runCommand(command);
-
-  // yt-dlp replace பண்ணும், .%(ext)s actual extension ஆகும்
-  return filePath.replace("%(ext)s", "mp4");
+export async function downloadVideo(url, format = "mp4") {
+  try {
+    const output = path.join(downloadDir, `video-%(id)s.%(ext)s`);
+    await ytdlp(url, {
+      format: "bestvideo+bestaudio/best",
+      output,
+      mergeOutputFormat: format,
+      noWarnings: true,
+      noCallHome: true,
+      preferFreeFormats: true,
+      userAgent:
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36",
+      cookies: cookieFile, // ✅ cookies file
+    });
+    return output;
+  } catch (error) {
+    console.error("yt-dlp download error:", error.message);
+    throw error;
+  }
 }
