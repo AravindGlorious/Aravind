@@ -21,6 +21,8 @@ function ensureCookiesFile() {
     } catch (err) {
       console.error("❌ Failed to decode YOUTUBE_COOKIES:", err.message);
     }
+  } else {
+    console.warn("⚠️ YOUTUBE_COOKIES env variable is missing!");
   }
 }
 
@@ -28,18 +30,16 @@ function ensureCookiesFile() {
 async function runYtDlp(args) {
   ensureCookiesFile();
   const bin = path.join(__dirname, "../node_modules/yt-dlp-exec/bin/yt-dlp");
+
   const fullArgs = [
     ...args,
-    "--cookies",
-    COOKIES_PATH,
+    "--cookies", COOKIES_PATH,
     "--no-warnings",
     "--no-call-home",
     "--prefer-free-formats",
-    "--add-header",
-    "referer:youtube.com",
-    "--add-header",
-    "user-agent:googlebot",
+    "--user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
   ];
+
   return exec(bin, fullArgs, { maxBuffer: 1024 * 1024 * 10 }); // 10MB buffer
 }
 
