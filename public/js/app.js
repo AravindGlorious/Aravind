@@ -60,6 +60,17 @@ function formatDuration(seconds) {
 }
 
 // -----------------------------
+// Safe JSON Parser
+// -----------------------------
+async function safeJson(res) {
+  try {
+    return await res.json();
+  } catch {
+    return null; // empty or invalid JSON
+  }
+}
+
+// -----------------------------
 // Check Video Info
 // -----------------------------
 form.addEventListener("submit", async (e) => {
@@ -79,8 +90,8 @@ form.addEventListener("submit", async (e) => {
       body: JSON.stringify({ url }),
     });
 
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Failed to fetch video info");
+    const data = await safeJson(res);
+    if (!res.ok || !data) throw new Error(data?.error || "Failed to fetch video info");
 
     currentInfo = data;
 
@@ -112,7 +123,6 @@ downloadBtn.addEventListener("click", async () => {
   downloadBtn.disabled = true;
 
   try {
-    // Backend will stream the file directly
     const response = await fetch("/api/download", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -120,11 +130,10 @@ downloadBtn.addEventListener("click", async () => {
     });
 
     if (!response.ok) {
-      const err = await response.json();
-      throw new Error(err.error || "Download failed");
+      const err = await safeJson(response);
+      throw new Error(err?.error || "Download failed");
     }
 
-    // Convert response to blob and download
     const blob = await response.blob();
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
