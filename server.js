@@ -6,7 +6,6 @@ import helmet from "helmet";
 import compression from "compression";
 import morgan from "morgan";
 import { getVideoInfo, downloadVideo } from "./utils/ytdlp.js";
-import fs from "fs";
 
 const app = express();
 const PORT = process.env.PORT || 10000;
@@ -22,10 +21,6 @@ app.use(compression());
 app.use(morgan("dev"));
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "public")));
-
-// Ensure downloads folder exists
-const downloadsDir = path.join(__dirname, "downloads");
-if (!fs.existsSync(downloadsDir)) fs.mkdirSync(downloadsDir);
 
 // Health check
 app.get("/api/health", (req, res) => {
