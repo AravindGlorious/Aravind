@@ -1,5 +1,6 @@
 import express from "express";
 import path from "path";
+import fs from "fs";
 import { fileURLToPath } from "url";
 import cors from "cors";
 import helmet from "helmet";
@@ -10,6 +11,7 @@ import { getVideoInfo, downloadVideo } from "./utils/ytdlp.js";
 const app = express();
 const PORT = process.env.PORT || 10000;
 
+// __dirname fix for ES Modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -19,6 +21,7 @@ app.use(helmet());
 app.use(compression());
 app.use(morgan("dev"));
 app.use(express.json());
+app.use(express.urlencoded({ extended: true })); // For form POST
 app.use(express.static(path.join(__dirname, "public")));
 
 // Health check
@@ -40,16 +43,18 @@ app.post("/api/info", async (req, res) => {
   }
 });
 
-// API → Download video
+// API → Download video (streaming)
 app.post("/api/download", async (req, res) => {
   try {
     const { url, format } = req.body;
     if (!url) return res.status(400).json({ error: "Missing video URL" });
 
     const filePath = await downloadVideo(url, format || "best");
+    const fileName = `${Date.now()}${format === "audio" ? ".mp3" : ".mp4"}`;
 
-    res.download(filePath, (err) => {
+    res.download(filePath, fileName, (err) => {
       if (err) console.error("Download error:", err);
+      fs.unlink(filePath, () => {}); // Delete temp file after sending
     });
   } catch (err) {
     console.error("YT-DLP DOWNLOAD ERROR:", err.message);
