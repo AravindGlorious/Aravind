@@ -1,4 +1,5 @@
 // /public/js/app.js
+
 const form = document.getElementById("dl-form");
 const urlInput = document.getElementById("url");
 const checkBtn = document.getElementById("checkBtn");
@@ -33,11 +34,13 @@ langToggle.addEventListener("click", () => {
   if (isTamil) {
     langToggle.textContent = "English";
     heroText.textContent = "லிங்க் ஒட்டு →";
-    subText.textContent = "YouTube, Instagram, Facebook, TikTok & மேலும். அசல் தரம். பதிவு தேவையில்லை. 100% இலவசம்.";
+    subText.textContent =
+      "YouTube, Instagram, Facebook, TikTok & மேலும். அசல் தரம். பதிவு தேவையில்லை. 100% இலவசம்.";
   } else {
     langToggle.textContent = "தமிழ்";
     heroText.textContent = "Paste link →";
-    subText.textContent = "YouTube, Instagram, Facebook, TikTok & more. Original quality. No signup. 100% free for a limited time.";
+    subText.textContent =
+      "YouTube, Instagram, Facebook, TikTok & more. Original quality. No signup. 100% free for a limited time.";
   }
 });
 
@@ -99,38 +102,42 @@ form.addEventListener("submit", async (e) => {
 // -----------------------------
 // Download Video
 // -----------------------------
-downloadBtn.addEventListener("click", () => {
+downloadBtn.addEventListener("click", async () => {
   if (!currentInfo) return;
 
   const url = currentInfo.webpage_url;
   const format = qualitySelect.value;
-  const fileName = `${currentInfo.title || "video"}${format === "audio" ? ".mp3" : ".mp4"}`;
 
   downloadBtn.textContent = "Downloading...";
   downloadBtn.disabled = true;
 
-  // Create a form to trigger browser download via POST
-  const formEl = document.createElement("form");
-  formEl.method = "POST";
-  formEl.action = "/api/download";
-  formEl.target = "_blank";
+  try {
+    // Backend will stream the file directly
+    const response = await fetch("/api/download", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url, format }),
+    });
 
-  const urlInputEl = document.createElement("input");
-  urlInputEl.type = "hidden";
-  urlInputEl.name = "url";
-  urlInputEl.value = url;
+    if (!response.ok) {
+      const err = await response.json();
+      throw new Error(err.error || "Download failed");
+    }
 
-  const formatInputEl = document.createElement("input");
-  formatInputEl.type = "hidden";
-  formatInputEl.name = "format";
-  formatInputEl.value = format;
-
-  formEl.appendChild(urlInputEl);
-  formEl.appendChild(formatInputEl);
-  document.body.appendChild(formEl);
-  formEl.submit();
-  document.body.removeChild(formEl);
-
-  downloadBtn.textContent = "Download";
-  downloadBtn.disabled = false;
+    // Convert response to blob and download
+    const blob = await response.blob();
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `${currentInfo.title || "video"}${
+      format === "audio" ? ".mp3" : ".mp4"
+    }`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  } catch (err) {
+    alert(err.message);
+    console.error("Download error:", err);
+  } finally {
+    downloadBtn.textContent = "Download";
+    downloadBtn.disabled = false;
+  }
 });
