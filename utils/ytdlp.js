@@ -1,59 +1,69 @@
-import ytdlp from "yt-dlp-exec";
 import fs from "fs";
-import path from "path";
+import { execa } from "execa";
 
-// ✅ Create cookies.txt from ENV variable (for YouTube login-protected videos)
-const cookiesPath = path.join(process.cwd(), "cookies.txt");
+let cookieFile = null;
+
+// Decode cookies from ENV → write to /tmp
 if (process.env.YOUTUBE_COOKIES) {
-  fs.writeFileSync(cookiesPath, process.env.YOUTUBE_COOKIES);
+  try {
+    const decoded = Buffer.from(process.env.YOUTUBE_COOKIES, "base64").toString("utf-8");
+    cookieFile = "/tmp/cookies.txt"; // Render tmp dir
+    fs.writeFileSync(cookieFile, decoded);
+    console.log("✅ Cookies file created at", cookieFile);
+  } catch (err) {
+    console.error("❌ Failed to decode cookies:", err.message);
+  }
 }
 
-// Ensure downloads directory exists
-const downloadsDir = path.join(process.cwd(), "downloads");
-if (!fs.existsSync(downloadsDir)) fs.mkdirSync(downloadsDir);
-
 /**
- * Fetch video info from YouTube (or other supported platforms)
- * @param {string} url - Video URL
- * @returns {Promise<Object>} Video info JSON
+ * Get video info (title, thumbnail, duration, etc.)
  */
 export async function getVideoInfo(url) {
   try {
-    const info = await ytdlp(url, {
-      dumpSingleJson: true,
-      noWarnings: true,
-      noCallHome: true,
-      preferFreeFormats: true,
-      addHeader: ["referer:youtube.com", "user-agent:googlebot"],
-      cookies: process.env.YOUTUBE_COOKIES ? cookiesPath : undefined,
-    });
-    return info;
+    const args = [
+      url,
+      "--dump-single-json",
+      "--no-warnings",
+      "--no-call-home",
+      "--prefer-free-formats",
+      "--add-header", "referer:youtube.com",
+      "--add-header", "user-agent:googlebot"
+    ];
+
+    if (cookieFile) {
+      args.push("--cookies", cookieFile);
+    }
+
+    const { stdout } = await execa("yt-dlp", args, { timeout: 60000 });
+    return JSON.parse(stdout);
   } catch (err) {
-    console.error("YT-DLP INFO ERROR:", err.message);
+    console.error("YT-DLP INFO ERROR:", err);
     throw err;
   }
 }
 
 /**
- * Download video to downloads folder
- * @param {string} url - Video URL
- * @param {string} format - Format code (default: best)
- * @returns {Promise<string>} File path of downloaded video
+ * Download video and return saved file path
  */
 export async function downloadVideo(url, format = "best") {
   try {
-    const output = path.join(downloadsDir, "%(title)s.%(ext)s");
+    const output = "/tmp/video.%(ext)s";
+    const args = [
+      url,
+      "-f", format,
+      "-o", output,
+    ];
 
-    const filePath = await ytdlp(url, {
-      format,
-      output,
-      addHeader: ["referer:youtube.com", "user-agent:googlebot"],
-      cookies: process.env.YOUTUBE_COOKIES ? cookiesPath : undefined,
-    });
+    if (cookieFile) {
+      args.push("--cookies", cookieFile);
+    }
 
-    return filePath;
+    await execa("yt-dlp", args, { timeout: 0 }); // no timeout for large files
+
+    // By default output = /tmp/video.mp4
+    return "/tmp/video.mp4";
   } catch (err) {
-    console.error("YT-DLP DOWNLOAD ERROR:", err.message);
+    console.error("YT-DLP DOWNLOAD ERROR:", err);
     throw err;
   }
 }
