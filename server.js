@@ -10,7 +10,6 @@ import { getVideoInfo, downloadVideo } from "./utils/ytdlp.js";
 const app = express();
 const PORT = process.env.PORT || 10000;
 
-// __dirname fix for ES Modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
