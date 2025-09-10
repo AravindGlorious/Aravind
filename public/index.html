@@ -52,13 +52,13 @@
 <body class="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 antialiased">
 
   <!-- Header -->
-  <header class="sticky top-0 backdrop-blur bg-white/70 dark:bg-gray-800/70 border-b border-gray-100 dark:border-gray-700 z-50">
-    <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
+  <header class="sticky top-0 backdrop-blur bg-white/80 dark:bg-gray-800/80 border-b border-gray-200 dark:border-gray-700 z-50">
+    <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
       <a href="/" class="flex items-center gap-3">
-        <img src="/favicon.svg" class="h-8 w-8" alt="QuickDownload logo">
-        <span class="text-lg font-bold tracking-tight">QuickDownload</span>
+        <img src="/favicon.svg" class="h-10 w-10 md:h-12 md:w-12" alt="QuickDownload logo">
+        <span class="text-xl md:text-2xl font-bold tracking-tight">QuickDownload</span>
       </a>
-      <nav class="flex items-center gap-5 text-sm">
+      <nav class="flex items-center gap-6 text-sm md:text-base">
         <button id="langToggle" class="hover:underline">தமிழ்</button>
         <button id="darkToggle" class="hover:underline">🌙</button>
         <a class="hover:underline" href="/terms.html">Terms</a>
@@ -68,28 +68,28 @@
   </header>
 
   <!-- Main Hero -->
-  <main>
-    <section class="relative">
-      <div class="max-w-5xl mx-auto px-4 py-16 lg:py-24 text-center">
+  <main class="pt-16 md:pt-24">
+    <section>
+      <div class="max-w-5xl mx-auto px-6 text-center">
         <!-- Hero Text -->
-        <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-tight tracking-tight">
+        <h1 class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold leading-tight tracking-tight">
           <span id="heroText">Paste link →</span>
           <span class="bg-gradient-to-r from-indigo-600 to-blue-600 bg-clip-text text-transparent">Download HD</span>
         </h1>
-        <p class="mt-5 text-lg text-gray-600 dark:text-gray-300" id="subText">
+        <p class="mt-4 md:mt-6 text-gray-600 dark:text-gray-300 text-base md:text-lg" id="subText">
           YouTube, Instagram, Facebook, TikTok & more. Original quality. No signup. 100% free for a limited time.
         </p>
 
         <!-- Input Card -->
-        <div class="mt-10 bg-white dark:bg-gray-800 shadow-xl shadow-gray-200/30 dark:shadow-black/20 rounded-2xl p-4 md:p-6 max-w-3xl mx-auto">
-          <form id="dl-form" class="flex flex-col sm:flex-col md:flex-row gap-3 items-center">
+        <div class="mt-10 bg-white dark:bg-gray-800 shadow-xl rounded-2xl p-5 md:p-6 max-w-3xl mx-auto">
+          <form id="dl-form" class="flex flex-col md:flex-row gap-3 items-center">
             <input id="url" type="url" required 
               placeholder="Paste video link here (YouTube, Instagram, Facebook, TikTok...)" 
-              class="flex-1 rounded-xl border border-gray-200 dark:border-gray-700 px-4 py-3 outline-none 
-                     focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 dark:bg-gray-900 dark:text-white text-sm" />
+              class="flex-1 rounded-xl border border-gray-200 dark:border-gray-700 px-4 py-3 text-sm md:text-base outline-none 
+                     focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 dark:bg-gray-900 dark:text-white" />
 
             <select id="quality" 
-              class="rounded-xl border border-gray-200 dark:border-gray-700 px-3 py-3 text-sm 
+              class="rounded-xl border border-gray-200 dark:border-gray-700 px-3 py-3 text-sm md:text-base 
                      dark:bg-gray-900 dark:text-white">
               <option value="best">Best</option>
               <option value="720p">720p</option>
@@ -119,10 +119,10 @@
           <!-- Preview -->
           <div id="preview" class="hidden mt-6 grid grid-cols-1 sm:grid-cols-[120px,1fr] gap-4 items-center">
             <img id="thumb" src="" alt="Preview" 
-                 class="w-32 h-20 object-cover rounded-xl border border-gray-200 dark:border-gray-700"/>
-            <div>
-              <h3 id="title" class="font-semibold line-clamp-2"></h3>
-              <p id="meta" class="text-sm text-gray-500 dark:text-gray-400"></p>
+                 class="w-32 h-20 md:w-36 md:h-24 object-cover rounded-xl border border-gray-200 dark:border-gray-700"/>
+            <div class="text-left">
+              <h3 id="title" class="font-semibold line-clamp-2 text-sm md:text-base"></h3>
+              <p id="meta" class="text-xs md:text-sm text-gray-500 dark:text-gray-400"></p>
             </div>
           </div>
 
@@ -154,7 +154,7 @@
 
   <!-- Footer -->
   <footer class="border-t bg-white dark:bg-gray-800">
-    <div class="max-w-5xl mx-auto px-4 py-8 flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-gray-500 dark:text-gray-400">
+    <div class="max-w-5xl mx-auto px-6 py-8 flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-gray-500 dark:text-gray-400">
       <p>© <span id="year"></span> QuickDownload. All rights reserved.</p>
       <div class="flex gap-5">
         <a class="hover:underline" href="/terms.html">Terms</a>
@@ -163,33 +163,6 @@
     </div>
   </footer>
 
-  <script src="/js/app.js" defer></script>
-  <script>
-    // Dark Mode Toggle
-    document.getElementById("darkToggle").addEventListener("click", () => {
-      document.documentElement.classList.toggle("dark");
-    });
-
-    // Language Toggle
-    const langToggle = document.getElementById("langToggle");
-    const heroText = document.getElementById("heroText");
-    const subText = document.getElementById("subText");
-    let isTamil = false;
-    langToggle.addEventListener("click", () => {
-      isTamil = !isTamil;
-      if(isTamil){
-        langToggle.textContent = "English";
-        heroText.textContent = "லிங்க் ஒட்டு →";
-        subText.textContent = "YouTube, Instagram, Facebook, TikTok & மேலும். அசல் தரம். பதிவு தேவையில்லை. 100% இலவசம்.";
-      } else {
-        langToggle.textContent = "தமிழ்";
-        heroText.textContent = "Paste link →";
-        subText.textContent = "YouTube, Instagram, Facebook, TikTok & more. Original quality. No signup. 100% free for a limited time.";
-      }
-    });
-
-    // Footer year
-    document.getElementById("year").textContent = new Date().getFullYear();
-  </script>
+  <script src="/js/app.js"></script>
 </body>
 </html>
