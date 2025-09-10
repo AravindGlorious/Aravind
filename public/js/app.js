@@ -1,4 +1,3 @@
-// /public/js/app.js
 const form = document.getElementById("dl-form");
 const urlInput = document.getElementById("url");
 const checkBtn = document.getElementById("checkBtn");
@@ -12,39 +11,6 @@ const errorEl = document.getElementById("error");
 const qualitySelect = document.getElementById("quality");
 
 let currentInfo = null;
-
-// -----------------------------
-// Dark Mode Toggle
-// -----------------------------
-document.getElementById("darkToggle").addEventListener("click", () => {
-  document.documentElement.classList.toggle("dark");
-});
-
-// -----------------------------
-// Language Toggle
-// -----------------------------
-const langToggle = document.getElementById("langToggle");
-const heroText = document.getElementById("heroText");
-const subText = document.getElementById("subText");
-let isTamil = false;
-
-langToggle.addEventListener("click", () => {
-  isTamil = !isTamil;
-  if (isTamil) {
-    langToggle.textContent = "English";
-    heroText.textContent = "லிங்க் ஒட்டு →";
-    subText.textContent = "YouTube, Instagram, Facebook, TikTok & மேலும். அசல் தரம். பதிவு தேவையில்லை. 100% இலவசம்.";
-  } else {
-    langToggle.textContent = "தமிழ்";
-    heroText.textContent = "Paste link →";
-    subText.textContent = "YouTube, Instagram, Facebook, TikTok & more. Original quality. No signup. 100% free for a limited time.";
-  }
-});
-
-// -----------------------------
-// Footer Year
-// -----------------------------
-document.getElementById("year").textContent = new Date().getFullYear();
 
 // -----------------------------
 // Format Duration
@@ -97,7 +63,7 @@ form.addEventListener("submit", async (e) => {
 });
 
 // -----------------------------
-// Download Video
+// Download Video/Audio
 // -----------------------------
 downloadBtn.addEventListener("click", async () => {
   if (!currentInfo) return;
@@ -115,14 +81,18 @@ downloadBtn.addEventListener("click", async () => {
       body: JSON.stringify({ url, format }),
     });
 
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Download failed");
+    if (!res.ok) throw new Error("Download failed");
 
-    const blob = await fetch(data.filePath).then(r => r.blob());
+    const blob = await res.blob();
     const a = document.createElement("a");
+    const safeTitle = (currentInfo.title || "video").replace(/[^a-z0-9]/gi, "_").toLowerCase();
+    const ext = format === "audio" ? "mp3" : "mp4";
+
     a.href = URL.createObjectURL(blob);
-    a.download = `${currentInfo.title || "video"}${format === "audio" ? ".mp3" : ".mp4"}`;
+    a.download = `${safeTitle}.${ext}`;
     a.click();
+    URL.revokeObjectURL(a.href);
+
   } catch (err) {
     alert(err.message);
   } finally {
