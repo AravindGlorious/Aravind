@@ -1,67 +1,62 @@
-import { exec } from 'child_process';
-import fs from 'fs';
-import path from 'path';
+import ytdlp from "yt-dlp-exec";
+import fs from "fs";
 
-const DOWNLOAD_DIR = path.join(process.cwd(), 'downloads');
-const COOKIES_FILE = path.join(process.cwd(), 'cookies.txt'); // <- your cookies.txt
+// Common yt-dlp options
+const defaultOptions = {
+  noWarnings: true,
+  noCallHome: true,
+  preferFreeFormats: true,
+  addHeader: [
+    "user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) " +
+      "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0 Safari/537.36",
+    "referer: https://www.youtube.com/"
+  ],
+  cookies: fs.existsSync("cookies.txt") ? "cookies.txt" : undefined
+};
 
-if (!fs.existsSync(DOWNLOAD_DIR)) fs.mkdirSync(DOWNLOAD_DIR, { recursive: true });
-
-function cleanupDownloads() {
-  const files = fs.readdirSync(DOWNLOAD_DIR);
-  const now = Date.now();
-  files.forEach(file => {
-    const filePath = path.join(DOWNLOAD_DIR, file);
-    const stats = fs.statSync(filePath);
-    if (now - stats.mtimeMs > 3600 * 1000) fs.unlinkSync(filePath);
-  });
-}
-
-function buildCommand(url, extraArgs = '') {
-  return [
-    `"${path.join(process.cwd(), 'node_modules', '.bin', 'yt-dlp')}"`,
-    url,
-    '--no-warnings',
-    '--no-call-home',
-    '--prefer-free-formats',
-    `--add-header referer:youtube.com`,
-    `--add-header user-agent:Mozilla/5.0`,
-    `--cookies "${COOKIES_FILE}"`,
-    extraArgs
-  ].join(' ');
-}
-
-export function getVideoInfo(url) {
-  return new Promise((resolve, reject) => {
-    cleanupDownloads();
-    const cmd = buildCommand(url, '--dump-single-json');
-    exec(cmd, { maxBuffer: 1024 * 1024 * 50 }, (err, stdout, stderr) => {
-      if (err) return reject(new Error(stderr || err.message));
-      try {
-        const info = JSON.parse(stdout);
-        resolve(info);
-      } catch {
-        reject(new Error('Failed to parse video info JSON'));
-      }
+// 🔹 Get video info
+export async function getInfo(url) {
+  try {
+    const info = await ytdlp(url, {
+      ...defaultOptions,
+      dumpSingleJson: true
     });
-  });
+
+    let thumb =
+      info.thumbnail ||
+      (info.thumbnails && info.thumbnails[0]?.url) ||
+      null;
+
+    return {
+      title: info.title || "Untitled Video",
+      uploader: info.uploader || "Unknown",
+      duration: info.duration || null,
+      webpage_url: info.webpage_url || url,
+      thumbnail: thumb,
+      formats: info.formats?.map(f => ({
+        itag: f.format_id,
+        resolution: f.height ? `${f.height}p` : f.format_note || "audio",
+        ext: f.ext,
+        url: f.url
+      })) || []
+    };
+  } catch (err) {
+    console.error("yt-dlp getInfo error:", err);
+    throw new Error("Failed to fetch video info");
+  }
 }
 
-export function downloadVideo(url, format = 'best') {
-  return new Promise((resolve, reject) => {
-    cleanupDownloads();
-    const outputFile = path.join(DOWNLOAD_DIR, `video_${Date.now()}.%(ext)s`);
-    const cmd = buildCommand(url, `-f ${format} -o "${outputFile}"`);
-
-    exec(cmd, { maxBuffer: 1024 * 1024 * 50 }, (err, stdout, stderr) => {
-      if (err) return reject(new Error(stderr || err.message));
-
-      const matched = stdout.match(/Destination: (.+)/);
-      if (matched && matched[1]) return resolve(matched[1].trim());
-
-      const files = fs.readdirSync(DOWNLOAD_DIR).map(f => path.join(DOWNLOAD_DIR, f));
-      const newest = files.sort((a, b) => fs.statSync(b).mtimeMs - fs.statSync(a).mtimeMs)[0];
-      resolve(newest);
+// 🔹 Download video to a file
+export async function downloadVideo(url, itag, outputPath) {
+  try {
+    await ytdlp(url, {
+      ...defaultOptions,
+      format: itag,
+      output: outputPath
     });
-  });
+    return true;
+  } catch (err) {
+    console.error("yt-dlp download error:", err);
+    throw new Error("Failed to download video");
+  }
 }
