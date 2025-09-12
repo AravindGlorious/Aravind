@@ -45,20 +45,37 @@
   <script>
     tailwind.config = {
       darkMode: 'class',
-      theme: { extend: { fontFamily: { sans: ['Poppins', 'ui-sans-serif', 'system-ui'] } } }
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Poppins', 'ui-sans-serif', 'system-ui'] },
+          keyframes: {
+            fadeIn: { '0%': { opacity: 0 }, '100%': { opacity: 1 } },
+            slideUp: { '0%': { transform: 'translateY(10px)', opacity: 0 }, '100%': { transform: 'translateY(0)', opacity: 1 } }
+          },
+          animation: {
+            fadeIn: 'fadeIn 0.5s ease-out forwards',
+            slideUp: 'slideUp 0.5s ease-out forwards'
+          }
+        }
+      }
     }
   </script>
+  <style>
+    body, header, footer, input, select, button, .shadow-sm, .shadow-xl, .bg-white, .dark\:bg-gray-800 {
+      transition: all 0.3s ease;
+    }
+  </style>
 </head>
-<body class="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 antialiased">
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 antialiased transition-all duration-300">
 
   <!-- Header -->
-  <header class="sticky top-0 backdrop-blur bg-white/80 dark:bg-gray-800/80 border-b border-gray-200 dark:border-gray-700 z-50">
-    <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+  <header class="sticky top-0 backdrop-blur bg-white/80 dark:bg-gray-800/80 border-b border-gray-200 dark:border-gray-700 z-50 transition-all duration-300">
+    <div class="max-w-6xl mx-auto px-6 py-4 flex flex-wrap items-center justify-between">
       <a href="/" class="flex items-center gap-3">
         <img src="/favicon.svg" class="h-10 w-10 md:h-12 md:w-12" alt="QuickDownload logo">
         <span class="text-xl md:text-2xl font-bold tracking-tight">QuickDownload</span>
       </a>
-      <nav class="flex flex-wrap items-center gap-6 text-sm md:text-base">
+      <nav class="flex flex-wrap items-center gap-6 text-sm md:text-base mt-2 md:mt-0">
         <button id="langToggle" class="hover:underline">தமிழ்</button>
         <button id="darkToggle" class="hover:underline">🌙</button>
         <a class="hover:underline" href="/terms.html">Terms</a>
@@ -71,7 +88,6 @@
   <main class="pt-16 md:pt-24">
     <section>
       <div class="max-w-5xl mx-auto px-6 text-center">
-        <!-- Hero Text -->
         <h1 class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold leading-tight tracking-tight">
           <span class="block" id="heroText">Paste link →</span>
           <span class="block bg-gradient-to-r from-indigo-600 to-blue-600 bg-clip-text text-transparent">Download HD</span>
@@ -81,14 +97,14 @@
         </p>
 
         <!-- Input Card -->
-        <div class="mt-10 bg-white dark:bg-gray-800 shadow-xl rounded-2xl p-5 md:p-6 max-w-3xl mx-auto">
+        <div class="mt-10 bg-white dark:bg-gray-800 shadow-xl rounded-2xl p-5 md:p-6 max-w-3xl mx-auto transition-all duration-300">
           <form id="dl-form" class="flex flex-col md:flex-row gap-3 items-center">
             <input id="url" type="url" required 
               placeholder="Paste video link here (YouTube, Instagram, Facebook, TikTok...)" 
               class="flex-1 rounded-xl border border-gray-200 dark:border-gray-700 px-4 py-3 text-sm md:text-base outline-none 
-                     focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 dark:bg-gray-900 dark:text-white" />
+                     focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 dark:bg-gray-900 dark:text-white transition-all duration-300" />
 
-            <select id="quality" class="rounded-xl border border-gray-200 dark:border-gray-700 px-3 py-3 text-sm md:text-base dark:bg-gray-900 dark:text-white md:flex-shrink-0">
+            <select id="quality" class="rounded-xl border border-gray-200 dark:border-gray-700 px-3 py-3 text-sm md:text-base dark:bg-gray-900 dark:text-white md:flex-shrink-0 transition-all duration-300">
               <option value="best">Best</option>
               <option value="720p">720p</option>
               <option value="480p">480p</option>
@@ -105,21 +121,18 @@
             </div>
           </form>
 
-          <!-- Loader -->
-          <div id="loader" class="hidden mt-4 text-indigo-600 text-sm flex items-center justify-center gap-2">
-            <svg class="animate-spin h-5 w-5 text-indigo-600" xmlns="http://www.w3.org/2000/svg" 
-                 fill="none" viewBox="0 0 24 24">
+          <div id="loader" class="hidden mt-6 flex flex-col items-center justify-center gap-2 text-indigo-600 text-sm animate-fadeIn">
+            <svg class="animate-spin h-6 w-6 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
               <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
             </svg>
-            Checking video…
+            <span>Checking video…</span>
           </div>
 
-          <!-- Preview -->
-          <div id="preview" class="hidden mt-6 grid grid-cols-1 sm:grid-cols-[120px,1fr] gap-4 items-center">
+          <div id="preview" class="hidden mt-6 flex flex-col sm:flex-row items-center gap-4 justify-center text-left animate-slideUp">
             <img id="thumb" src="" alt="Preview" 
-                 class="w-32 h-20 md:w-36 md:h-24 object-cover rounded-xl border border-gray-200 dark:border-gray-700"/>
-            <div class="text-left">
+                 class="w-32 h-20 md:w-36 md:h-24 object-cover rounded-xl border border-gray-200 dark:border-gray-700 transition-all duration-300"/>
+            <div class="flex-1">
               <h3 id="title" class="font-semibold line-clamp-2 text-sm md:text-base"></h3>
               <p id="meta" class="text-xs md:text-sm text-gray-500 dark:text-gray-400"></p>
             </div>
@@ -130,19 +143,19 @@
 
         <!-- Logos Row -->
         <div class="mt-12 grid grid-cols-2 sm:grid-cols-4 gap-4 text-center text-sm font-medium text-gray-700 dark:text-gray-300 max-w-3xl mx-auto">
-          <div class="flex flex-col items-center justify-center gap-2 p-3 rounded-xl border bg-white dark:bg-gray-800 shadow-sm h-28">
+          <div class="flex flex-col items-center justify-center gap-2 p-3 rounded-xl border bg-white dark:bg-gray-800 shadow-sm h-28 animate-slideUp transition-all duration-300">
             <img src="/icons/youtube.svg" class="h-6" alt="YouTube">
             <span>YouTube</span>
           </div>
-          <div class="flex flex-col items-center justify-center gap-2 p-3 rounded-xl border bg-white dark:bg-gray-800 shadow-sm h-28">
+          <div class="flex flex-col items-center justify-center gap-2 p-3 rounded-xl border bg-white dark:bg-gray-800 shadow-sm h-28 animate-slideUp transition-all duration-300">
             <img src="/icons/instagram.svg" class="h-6" alt="Instagram">
             <span>Instagram</span>
           </div>
-          <div class="flex flex-col items-center justify-center gap-2 p-3 rounded-xl border bg-white dark:bg-gray-800 shadow-sm h-28">
+          <div class="flex flex-col items-center justify-center gap-2 p-3 rounded-xl border bg-white dark:bg-gray-800 shadow-sm h-28 animate-slideUp transition-all duration-300">
             <img src="/icons/facebook.svg" class="h-6" alt="Facebook">
             <span>Facebook</span>
           </div>
-          <div class="flex flex-col items-center justify-center gap-2 p-3 rounded-xl border bg-white dark:bg-gray-800 shadow-sm h-28">
+          <div class="flex flex-col items-center justify-center gap-2 p-3 rounded-xl border bg-white dark:bg-gray-800 shadow-sm h-28 animate-slideUp transition-all duration-300">
             <img src="/icons/tiktok.svg" class="h-6" alt="TikTok">
             <span>TikTok</span>
           </div>
@@ -152,7 +165,7 @@
   </main>
 
   <!-- Footer -->
-  <footer class="border-t bg-white dark:bg-gray-800">
+  <footer class="border-t bg-white dark:bg-gray-800 transition-all duration-300">
     <div class="max-w-5xl mx-auto px-6 py-8 flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-gray-500 dark:text-gray-400">
       <p>© <span id="year"></span> QuickDownload. All rights reserved.</p>
       <div class="flex gap-5">
@@ -161,6 +174,16 @@
       </div>
     </div>
   </footer>
+
+  <script>
+    // Dark Mode Toggle
+    document.getElementById('darkToggle').addEventListener('click', () => {
+      document.documentElement.classList.toggle('dark');
+    });
+
+    // Set current year
+    document.getElementById('year').textContent = new Date().getFullYear();
+  </script>
 
   <script src="/js/app.js"></script>
 </body>
