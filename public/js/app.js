@@ -1,5 +1,6 @@
-// /public/js/app.js
-
+// -----------------------------
+// DOM Elements
+// -----------------------------
 const form = document.getElementById("dl-form");
 const urlInput = document.getElementById("url");
 const checkBtn = document.getElementById("checkBtn");
@@ -60,17 +61,6 @@ function formatDuration(seconds) {
 }
 
 // -----------------------------
-// Safe JSON Parser
-// -----------------------------
-async function safeJson(res) {
-  try {
-    return await res.json();
-  } catch {
-    return null; // empty or invalid JSON
-  }
-}
-
-// -----------------------------
 // Check Video Info
 // -----------------------------
 form.addEventListener("submit", async (e) => {
@@ -90,17 +80,42 @@ form.addEventListener("submit", async (e) => {
       body: JSON.stringify({ url }),
     });
 
-    const data = await safeJson(res);
-    if (!res.ok || !data) throw new Error(data?.error || "Failed to fetch video info");
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      throw new Error(errData.error || "Failed to fetch video info");
+    }
 
+    const data = await res.json();
     currentInfo = data;
 
+    // Update Preview
     thumb.src = data.thumbnail || "";
     title.textContent = data.title || "Untitled";
     meta.textContent = `Uploader: ${data.uploader || "Unknown"} | Duration: ${formatDuration(data.duration)}`;
 
     preview.classList.remove("hidden");
     downloadBtn.disabled = false;
+
+    // Populate Quality Options dynamically if available
+    if (data.formats) {
+      qualitySelect.innerHTML = "";
+      // Filter unique resolutions
+      const resolutions = new Set();
+      data.formats.forEach(f => {
+        if (f.height) resolutions.add(`${f.height}p`);
+      });
+      Array.from(resolutions)
+        .sort((a, b) => parseInt(b) - parseInt(a))
+        .forEach(res => {
+          const opt = document.createElement("option");
+          opt.value = res;
+          opt.textContent = res;
+          qualitySelect.appendChild(opt);
+        });
+      // Always add Best & Audio options
+      qualitySelect.insertAdjacentHTML("afterbegin", `<option value="best">Best</option>`);
+      qualitySelect.insertAdjacentHTML("beforeend", `<option value="audio">Audio Only (mp3)</option>`);
+    }
   } catch (err) {
     console.error(err);
     errorEl.textContent = err.message || "Something went wrong!";
@@ -116,7 +131,7 @@ form.addEventListener("submit", async (e) => {
 downloadBtn.addEventListener("click", async () => {
   if (!currentInfo) return;
 
-  const url = currentInfo.webpage_url;
+  const url = currentInfo.webpage_url || urlInput.value.trim();
   const format = qualitySelect.value;
 
   downloadBtn.textContent = "Downloading...";
@@ -130,17 +145,18 @@ downloadBtn.addEventListener("click", async () => {
     });
 
     if (!response.ok) {
-      const err = await safeJson(response);
-      throw new Error(err?.error || "Download failed");
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.error || "Download failed");
     }
 
+    // Convert response to blob and download
     const blob = await response.blob();
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
-    a.download = `${currentInfo.title || "video"}${
-      format === "audio" ? ".mp3" : ".mp4"
-    }`;
+    a.download = `${currentInfo.title || "video"}${format === "audio" ? ".mp3" : ".mp4"}`;
+    document.body.appendChild(a);
     a.click();
+    a.remove();
     URL.revokeObjectURL(a.href);
   } catch (err) {
     alert(err.message);
