@@ -1,4 +1,3 @@
-// /public/js/app.js
 const form = document.getElementById("dl-form");
 const urlInput = document.getElementById("url");
 const checkBtn = document.getElementById("checkBtn");
@@ -12,43 +11,12 @@ const errorEl = document.getElementById("error");
 const qualitySelect = document.getElementById("quality");
 let currentInfo = null;
 
-// Dark Mode Toggle
+// Dark mode
 document.getElementById("darkToggle").addEventListener("click", () => {
   document.documentElement.classList.toggle("dark");
 });
 
-// Language Toggle
-const langToggle = document.getElementById("langToggle");
-const heroText = document.getElementById("heroText");
-const subText = document.getElementById("subText");
-let isTamil = false;
-langToggle.addEventListener("click", () => {
-  isTamil = !isTamil;
-  if (isTamil) {
-    langToggle.textContent = "English";
-    heroText.textContent = "லிங்க் ஒட்டு →";
-    subText.textContent =
-      "YouTube, Instagram, Facebook, TikTok & மேலும். அசல் தரம். பதிவு தேவையில்லை. 100% இலவசம்.";
-  } else {
-    langToggle.textContent = "தமிழ்";
-    heroText.textContent = "Paste link →";
-    subText.textContent =
-      "YouTube, Instagram, Facebook, TikTok & more. Original quality. No signup. 100% free.";
-  }
-});
-
-// Footer Year
-document.getElementById("year").textContent = new Date().getFullYear();
-
-// Format Duration
-function formatDuration(seconds) {
-  if (!seconds) return "N/A";
-  const mins = Math.floor(seconds / 60);
-  const secs = seconds % 60;
-  return `${mins}:${secs.toString().padStart(2, "0")}`;
-}
-
-// Check Video Info
+// Check video info
 form.addEventListener("submit", async e => {
   e.preventDefault();
   const url = urlInput.value.trim();
@@ -71,25 +39,33 @@ form.addEventListener("submit", async e => {
 
     thumb.src = data.thumbnail || "";
     title.textContent = data.title || "Untitled";
-    meta.textContent = `Uploader: ${data.uploader || "Unknown"} | Duration: ${formatDuration(data.duration)}`;
+    meta.textContent = `Uploader: ${data.uploader || "Unknown"} | Duration: ${data.duration || "N/A"}s`;
+
+    // Populate formats
+    qualitySelect.innerHTML = "";
+    data.formats.forEach(f => {
+      const opt = document.createElement("option");
+      opt.value = f.itag;
+      opt.textContent = `${f.resolution} (${f.ext})`;
+      qualitySelect.appendChild(opt);
+    });
 
     preview.classList.remove("hidden");
     downloadBtn.disabled = false;
   } catch (err) {
     console.error(err);
-    errorEl.textContent = err.message || "Something went wrong!";
+    errorEl.textContent = err.message;
     errorEl.classList.remove("hidden");
   } finally {
     loader.classList.add("hidden");
   }
 });
 
-// Download Video
+// Download video
 downloadBtn.addEventListener("click", async () => {
   if (!currentInfo) return;
-
+  const itag = qualitySelect.value;
   const url = currentInfo.webpage_url;
-  const format = qualitySelect.value;
 
   downloadBtn.textContent = "Downloading...";
   downloadBtn.disabled = true;
@@ -98,7 +74,7 @@ downloadBtn.addEventListener("click", async () => {
     const response = await fetch("/api/download", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ url, format }),
+      body: JSON.stringify({ url, itag }),
     });
 
     if (!response.ok) {
@@ -109,7 +85,7 @@ downloadBtn.addEventListener("click", async () => {
     const blob = await response.blob();
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
-    a.download = `${currentInfo.title || "video"}${format === "audio" ? ".mp3" : ".mp4"}`;
+    a.download = `${currentInfo.title || "video"}.${itag.includes("audio") ? "mp3" : "mp4"}`;
     a.click();
     URL.revokeObjectURL(a.href);
   } catch (err) {
