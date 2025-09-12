@@ -1,3 +1,4 @@
+// server.js
 import express from "express";
 import path from "path";
 import fs from "fs";
@@ -15,10 +16,13 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Serve static frontend
+// Serve frontend static files
 app.use(express.static(path.join(__dirname, "public")));
+app.use("/downloads", express.static(path.join(__dirname, "downloads")));
 
-// API: fetch video info
+// -----------------------------
+// API: Get video info
+// -----------------------------
 app.post("/api/info", async (req, res) => {
   const { url } = req.body;
   if (!url) return res.status(400).json({ error: "URL is required" });
@@ -26,21 +30,22 @@ app.post("/api/info", async (req, res) => {
   try {
     const info = await getVideoInfo(url);
 
-    // Filter only mp4 or audio formats for download
-    const formats = (info.formats || []).filter(f => f.ext === "mp4" || f.acodec !== "none");
+    // Detect login required for YouTube
+    if (info?.error && info.error.includes("login")) {
+      return res.status(403).json({
+        error: "YouTube login required",
+        title: info.title,
+        thumbnail: info.thumbnail,
+      });
+    }
 
     res.json({
       title: info.title,
-      uploader: info.uploader || info.channel,
+      uploader: info.uploader,
       thumbnail: info.thumbnail,
       duration: info.duration,
       webpage_url: info.webpage_url,
-      formats: formats.map(f => ({
-        itag: f.format_id,
-        format: f.format,
-        ext: f.ext,
-        resolution: f.resolution || f.height + "p" || "audio",
-      })),
+      formats: info.formats || [],
     });
   } catch (err) {
     console.error(err);
@@ -48,29 +53,32 @@ app.post("/api/info", async (req, res) => {
   }
 });
 
-// API: download video
+// -----------------------------
+// API: Download video
+// -----------------------------
 app.post("/api/download", async (req, res) => {
-  const { url, itag } = req.body;
+  const { url, format } = req.body;
   if (!url) return res.status(400).json({ error: "URL is required" });
 
   try {
-    const format = itag || "best";
-    const output = await downloadVideo(url, format);
+    const filePath = await downloadVideo(url, format || "best");
+    const fileName = path.basename(filePath);
 
-    res.setHeader("Content-Disposition", `attachment; filename="video.mp4"`);
-    res.setHeader("Content-Type", "video/mp4");
-    res.send(output);
+    res.download(filePath, fileName, (err) => {
+      if (err) console.error("Download error:", err);
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: err.message });
   }
 });
 
-// Fallback
+// Fallback for frontend routes
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "public/index.html"));
 });
 
+// Start server
 app.listen(PORT, () => {
   console.log(`✅ Server running on http://0.0.0.0:${PORT}`);
 });
