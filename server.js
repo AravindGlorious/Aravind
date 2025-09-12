@@ -1,88 +1,78 @@
-// server.js
 import express from "express";
 import cors from "cors";
-import helmet from "helmet";
-import compression from "compression";
-import morgan from "morgan";
-import fs from "fs";
 import path from "path";
+import fs from "fs";
 import { fileURLToPath } from "url";
 import { getVideoInfo, downloadVideo } from "./utils/ytdlp.js";
-
-const app = express();
-const PORT = process.env.PORT || 10000;
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Middlewares
+const app = express();
 app.use(cors());
-app.use(helmet());
-app.use(compression());
-app.use(morgan("dev"));
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "public")));
 
-// 📂 Downloads folder path
-const downloadsDir = path.join(__dirname, "downloads");
+const DOWNLOAD_DIR = path.join(__dirname, "downloads");
 
-// Create downloads folder if not exists
-if (!fs.existsSync(downloadsDir)) {
-  fs.mkdirSync(downloadsDir);
-}
+// Ensure downloads folder exists
+if (!fs.existsSync(DOWNLOAD_DIR)) fs.mkdirSync(DOWNLOAD_DIR);
 
-// 🧹 Cleanup old files (>1hr)
+// Cleanup old files every hour
 setInterval(() => {
-  fs.readdir(downloadsDir, (err, files) => {
-    if (err) return;
+  fs.readdir(DOWNLOAD_DIR, (err, files) => {
+    if (err) return console.error(err);
     files.forEach(file => {
-      const filePath = path.join(downloadsDir, file);
+      const filePath = path.join(DOWNLOAD_DIR, file);
       fs.stat(filePath, (err, stats) => {
         if (err) return;
-        const now = Date.now();
-        const fileAge = (now - stats.mtimeMs) / 1000;
-        if (fileAge > 3600) {
-          fs.unlink(filePath, () => {
-            console.log(`🗑 Deleted old file: ${file}`);
-          });
+        const age = Date.now() - stats.mtimeMs;
+        if (age > 1000 * 60 * 60) { // 1 hour
+          fs.unlink(filePath, () => {});
         }
       });
     });
   });
-}, 30 * 60 * 1000); // run every 30 mins
+}, 1000 * 60 * 60); // every hour
 
-// Routes
-app.get("/api/info", async (req, res) => {
-  const { url } = req.query;
-  if (!url) return res.status(400).json({ error: "Missing URL" });
+// -------------------
+// API: Video Info
+// -------------------
+app.post("/api/info", async (req, res) => {
+  const { url } = req.body;
+  if (!url) return res.status(400).json({ error: "No URL provided" });
 
   try {
     const info = await getVideoInfo(url);
     res.json(info);
   } catch (err) {
+    console.error("Error fetching video info:", err);
     res.status(500).json({ error: err.message });
   }
 });
 
-app.get("/api/download", async (req, res) => {
-  const { url } = req.query;
-  if (!url) return res.status(400).json({ error: "Missing URL" });
+// -------------------
+// API: Download
+// -------------------
+app.post("/api/download", async (req, res) => {
+  const { url, format } = req.body;
+  if (!url) return res.status(400).json({ error: "No URL provided" });
 
   try {
-    const fileName = `video_${Date.now()}.mp4`;
-    const filePath = path.join(downloadsDir, fileName);
-
-    await downloadVideo(url, filePath);
-
-    res.download(filePath, fileName, err => {
-      if (err) console.error("Download error:", err);
+    const filePath = await downloadVideo(url, format, DOWNLOAD_DIR);
+    res.download(filePath, err => {
+      if (err) console.error(err);
+      // Optionally delete after sending
+      // fs.unlink(filePath, () => {});
     });
   } catch (err) {
+    console.error("Download error:", err);
     res.status(500).json({ error: err.message });
   }
 });
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`✅ Server running on http://0.0.0.0:${PORT}`);
-});
+// -------------------
+// Start Server
+// -------------------
+const PORT = process.env.PORT || 10000;
+app.listen(PORT, () => console.log(`✅ Server running on http://0.0.0.0:${PORT}`));
