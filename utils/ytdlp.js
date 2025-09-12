@@ -1,34 +1,45 @@
-// utils/ytdlp.js
-import youtubedl from "yt-dlp-exec";
+import { execFile } from "node:child_process";
+import path from "path";
+import { fileURLToPath } from "url";
 import fs from "fs";
+import ytdlp from "yt-dlp-exec";
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// -------------------
+// Get Video Info
+// -------------------
 export async function getVideoInfo(url) {
   try {
-    const output = await youtubedl(url, {
+    const info = await ytdlp(url, {
       dumpSingleJson: true,
       noWarnings: true,
-      noCallHome: true,
-      cookies: "/tmp/cookies.txt",
-      userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
+      preferFreeFormats: true,
+      addHeader: ["referer:youtube.com", "user-agent:Mozilla/5.0"]
     });
-
-    return output;
+    return info;
   } catch (err) {
-    console.error("yt-dlp error:", err);
-    throw new Error("Failed to fetch video info");
+    throw err;
   }
 }
 
-export async function downloadVideo(url, outputPath) {
-  try {
-    await youtubedl(url, {
-      output: outputPath,
-      cookies: "/tmp/cookies.txt",
-      userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
-    });
-    return outputPath;
-  } catch (err) {
-    console.error("yt-dlp download error:", err);
-    throw new Error("Failed to download video");
-  }
+// -------------------
+// Download Video
+// -------------------
+export async function downloadVideo(url, format, downloadDir) {
+  const fileName = `video_${Date.now()}.${format === "audio" ? "mp3" : "mp4"}`;
+  const filePath = path.join(downloadDir, fileName);
+
+  const options = {
+    output: filePath,
+    format: format === "audio" ? "bestaudio[ext=m4a]" : "bestvideo+bestaudio/best",
+    noWarnings: true,
+    addHeader: ["referer:youtube.com", "user-agent:Mozilla/5.0"],
+  };
+
+  if (format === "audio") options.extractAudio = true;
+  await ytdlp(url, options);
+
+  return filePath;
 }
