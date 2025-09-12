@@ -1,15 +1,15 @@
 // utils/ytdlp.js
-import ytdlp from 'yt-dlp-exec';
+import { exec } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 
 const DOWNLOAD_DIR = path.join(process.cwd(), 'downloads');
-const COOKIES_FILE = path.join(process.cwd(), 'cookies.txt'); // Put your cookies.txt here
+const COOKIES_FILE = path.join(process.cwd(), 'cookies.txt'); // <- your cookies.txt
 
-// Ensure downloads folder exists
-if (!fs.existsSync(DOWNLOAD_DIR)) fs.mkdirSync(DOWNLOAD_DIR);
+// Ensure downloads directory exists
+if (!fs.existsSync(DOWNLOAD_DIR)) fs.mkdirSync(DOWNLOAD_DIR, { recursive: true });
 
-// Auto-cleanup files older than 1 hour
+// Auto-cleanup: delete files older than 1 hour
 function cleanupDownloads() {
   const files = fs.readdirSync(DOWNLOAD_DIR);
   const now = Date.now();
@@ -20,51 +20,59 @@ function cleanupDownloads() {
   });
 }
 
-// -----------------------------
-// Get video info
-// -----------------------------
-export async function getVideoInfo(url) {
-  cleanupDownloads();
-  try {
-    const info = await ytdlp(url, {
-      dumpSingleJson: true,
-      noWarnings: true,
-      noCallHome: true,
-      preferFreeFormats: true,
-      addHeader: ['referer:youtube.com', 'user-agent:Mozilla/5.0'],
-      cookies: COOKIES_FILE,
-    });
-    return info;
-  } catch (err) {
-    throw new Error(err.stderr || err.message);
-  }
+// Build yt-dlp command
+function buildCommand(url, extraArgs = '') {
+  return [
+    `"${path.join(process.cwd(), 'node_modules', '.bin', 'yt-dlp')}"`,
+    url,
+    '--no-warnings',
+    '--no-call-home',
+    '--prefer-free-formats',
+    `--add-header referer:youtube.com`,
+    `--add-header user-agent:Mozilla/5.0`,
+    `--cookies "${COOKIES_FILE}"`,
+    extraArgs
+  ].join(' ');
 }
 
-// -----------------------------
-// Download video
-// -----------------------------
-export async function downloadVideo(url, format = 'best') {
-  cleanupDownloads();
-  const outputFile = path.join(DOWNLOAD_DIR, `video_${Date.now()}.%(ext)s`);
+// Get video info
+export function getVideoInfo(url) {
+  return new Promise((resolve, reject) => {
+    cleanupDownloads();
 
-  try {
-    await ytdlp(url, {
-      format,
-      output: outputFile,
-      noWarnings: true,
-      noCallHome: true,
-      preferFreeFormats: true,
-      addHeader: ['referer:youtube.com', 'user-agent:Mozilla/5.0'],
-      cookies: COOKIES_FILE,
+    const cmd = buildCommand(url, '--dump-single-json');
+
+    exec(cmd, { maxBuffer: 1024 * 1024 * 50 }, (err, stdout, stderr) => {
+      if (err) return reject(new Error(stderr || err.message));
+      try {
+        const info = JSON.parse(stdout);
+        resolve(info);
+      } catch (parseErr) {
+        reject(new Error('Failed to parse video info JSON'));
+      }
     });
+  });
+}
 
-    // Return the newest file in downloads folder
-    const downloadedFile = fs.readdirSync(DOWNLOAD_DIR)
-      .map(f => path.join(DOWNLOAD_DIR, f))
-      .sort((a, b) => fs.statSync(b).mtimeMs - fs.statSync(a).mtimeMs)[0];
+// Download video
+export function downloadVideo(url, format = 'best') {
+  return new Promise((resolve, reject) => {
+    cleanupDownloads();
 
-    return downloadedFile;
-  } catch (err) {
-    throw new Error(err.stderr || err.message);
-  }
+    const outputFile = path.join(DOWNLOAD_DIR, `video_${Date.now()}.%(ext)s`);
+    const cmd = buildCommand(url, `-f ${format} -o "${outputFile}"`);
+
+    exec(cmd, { maxBuffer: 1024 * 1024 * 50 }, (err, stdout, stderr) => {
+      if (err) return reject(new Error(stderr || err.message));
+
+      // yt-dlp replaces %(ext)s with actual extension
+      const matched = stdout.match(/Destination: (.+)/);
+      if (matched && matched[1]) return resolve(matched[1].trim());
+
+      // fallback: find newest file in downloads folder
+      const files = fs.readdirSync(DOWNLOAD_DIR).map(f => path.join(DOWNLOAD_DIR, f));
+      const newest = files.sort((a, b) => fs.statSync(b).mtimeMs - fs.statSync(a).mtimeMs)[0];
+      resolve(newest);
+    });
+  });
 }
