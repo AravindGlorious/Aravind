@@ -181,54 +181,31 @@
     </div>
   </footer>
 
+  <!-- Language toggle & current year logic only -->
   <script>
-  const toggle = document.getElementById('darkToggle');
-  const root = document.documentElement;
+    const langToggle = document.getElementById("langToggle");
+    const heroText = document.getElementById("heroText");
+    const subText = document.getElementById("subText");
+    let isTamil = false;
 
-  // Load saved theme
-  if (localStorage.getItem("theme") === "dark") {
-    root.classList.add("dark");
-    toggle.textContent = "☀️"; // light icon
-  } else {
-    toggle.textContent = "🌙"; // dark icon
-  }
+    langToggle.addEventListener("click", () => {
+      isTamil = !isTamil;
+      if (isTamil) {
+        langToggle.textContent = "English";
+        heroText.textContent = "லிங்க் ஒட்டு →";
+        subText.textContent = "YouTube, Instagram, Facebook, TikTok & மேலும். அசல் தரம். பதிவு தேவையில்லை. 100% இலவசம்.";
+      } else {
+        langToggle.textContent = "தமிழ்";
+        heroText.textContent = "Paste link →";
+        subText.textContent = "YouTube, Instagram, Facebook, TikTok, Twitter & more. Original quality. No signup. 100% free.";
+      }
+    });
 
-  // Toggle event
-  toggle.addEventListener("click", () => {
-    root.classList.toggle("dark");
-    if (root.classList.contains("dark")) {
-      localStorage.setItem("theme", "dark");
-      toggle.textContent = "☀️"; // switch to sun icon
-    } else {
-      localStorage.setItem("theme", "light");
-      toggle.textContent = "🌙"; // switch to moon icon
-    }
-  });
-    // 🌐 Language Toggle
-const langToggle = document.getElementById("langToggle");
-const heroText = document.getElementById("heroText");
-const subText = document.getElementById("subText");
-let isTamil = false;
+    // Current year
+    document.getElementById('year').textContent = new Date().getFullYear();
+  </script>
 
-langToggle.addEventListener("click", () => {
-  isTamil = !isTamil;
-  if (isTamil) {
-    langToggle.textContent = "English";
-    heroText.textContent = "லிங்க் ஒட்டு →";
-    subText.textContent =
-      "YouTube, Instagram, Facebook, TikTok & மேலும். அசல் தரம். பதிவு தேவையில்லை. 100% இலவசம்.";
-  } else {
-    langToggle.textContent = "தமிழ்";
-    heroText.textContent = "Paste link →";
-    subText.textContent =
-      "YouTube, Instagram, Facebook, TikTok, Twitter & more. Original quality. No signup. 100% free.";
-  }
-});
-
-  // Current year
-  document.getElementById('year').textContent = new Date().getFullYear();
-</script>
-
+  <!-- Main JS -->
   <script src="/js/app.js"></script>
 </body>
 </html>
