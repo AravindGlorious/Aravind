@@ -11,16 +11,35 @@ const errorEl = document.getElementById("error");
 const qualitySelect = document.getElementById("quality");
 let currentInfo = null;
 
-// Dark Mode Toggle
-document.getElementById("darkToggle").addEventListener("click", () => {
-  document.documentElement.classList.toggle("dark");
+// ✅ Dark Mode Toggle with LocalStorage + Icon
+const toggle = document.getElementById("darkToggle");
+const root = document.documentElement;
+
+// Load saved theme
+if (localStorage.getItem("theme") === "dark") {
+  root.classList.add("dark");
+  toggle.textContent = "☀️"; // light icon
+} else {
+  toggle.textContent = "🌙"; // dark icon
+}
+
+toggle.addEventListener("click", () => {
+  root.classList.toggle("dark");
+  if (root.classList.contains("dark")) {
+    localStorage.setItem("theme", "dark");
+    toggle.textContent = "☀️";
+  } else {
+    localStorage.setItem("theme", "light");
+    toggle.textContent = "🌙";
+  }
 });
 
-// Language Toggle (if you want)
+// 🌐 Language Toggle
 const langToggle = document.getElementById("langToggle");
 const heroText = document.getElementById("heroText");
 const subText = document.getElementById("subText");
 let isTamil = false;
+
 langToggle.addEventListener("click", () => {
   isTamil = !isTamil;
   if (isTamil) {
@@ -36,7 +55,7 @@ langToggle.addEventListener("click", () => {
   }
 });
 
-// Format duration
+// 🕒 Format duration
 function formatDuration(seconds) {
   if (!seconds) return "N/A";
   const mins = Math.floor(seconds / 60);
@@ -44,7 +63,7 @@ function formatDuration(seconds) {
   return `${mins}:${secs.toString().padStart(2, "0")}`;
 }
 
-// Fetch Video Info
+// 🎬 Fetch Video Info
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
   const url = urlInput.value.trim();
@@ -68,7 +87,9 @@ form.addEventListener("submit", async (e) => {
 
     thumb.src = data.thumbnail || "";
     titleEl.textContent = data.title || "Untitled";
-    meta.textContent = `Uploader: ${data.uploader || "Unknown"} | Duration: ${formatDuration(data.duration)}`;
+    meta.textContent = `Uploader: ${data.uploader || "Unknown"} | Duration: ${formatDuration(
+      data.duration
+    )}`;
 
     // Populate formats
     qualitySelect.innerHTML = "";
@@ -95,7 +116,7 @@ form.addEventListener("submit", async (e) => {
   }
 });
 
-// Download Video
+// ⬇️ Download Video
 downloadBtn.addEventListener("click", async () => {
   if (!currentInfo) return;
 
@@ -117,9 +138,11 @@ downloadBtn.addEventListener("click", async () => {
     }
 
     const blob = await response.blob();
-    const selectedFormat = currentInfo.formats.find(f => f.format_id == itag);
+    const selectedFormat = currentInfo.formats.find((f) => f.format_id == itag);
     const ext = selectedFormat?.ext || "mp4";
-    const safeTitle = (currentInfo.title || "video").replace(/[^a-z0-9]/gi, "_").substring(0, 50);
+    const safeTitle = (currentInfo.title || "video")
+      .replace(/[^a-z0-9]/gi, "_")
+      .substring(0, 50);
 
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
