@@ -1,3 +1,4 @@
+// ====== DOM Elements ======
 const form = document.getElementById("dl-form");
 const urlInput = document.getElementById("url");
 const checkBtn = document.getElementById("checkBtn");
@@ -9,33 +10,34 @@ const titleEl = document.getElementById("title");
 const meta = document.getElementById("meta");
 const errorEl = document.getElementById("error");
 const qualitySelect = document.getElementById("quality");
-let currentInfo = null;
-
-// Dark Mode
-const toggle = document.getElementById("darkToggle");
-const root = document.documentElement;
-if (localStorage.getItem("theme") === "dark") {
-  root.classList.add("dark");
-  toggle.textContent = "☀️";
-} else toggle.textContent = "🌙";
-
-toggle.addEventListener("click", () => {
-  root.classList.toggle("dark");
-  if (root.classList.contains("dark")) {
-    localStorage.setItem("theme", "dark");
-    toggle.textContent = "☀️";
-  } else {
-    localStorage.setItem("theme", "light");
-    toggle.textContent = "🌙";
-  }
-});
-
-// Language toggle
+const darkToggle = document.getElementById("darkToggle");
 const langToggle = document.getElementById("langToggle");
 const heroText = document.getElementById("heroText");
 const subText = document.getElementById("subText");
+
+let currentInfo = null;
 let isTamil = false;
 
+// ====== Dark Mode Toggle ======
+const root = document.documentElement;
+if (localStorage.getItem("theme") === "dark") {
+  root.classList.add("dark");
+  darkToggle.textContent = "☀️";
+} else {
+  darkToggle.textContent = "🌙";
+}
+darkToggle.addEventListener("click", () => {
+  root.classList.toggle("dark");
+  if (root.classList.contains("dark")) {
+    localStorage.setItem("theme", "dark");
+    darkToggle.textContent = "☀️";
+  } else {
+    localStorage.setItem("theme", "light");
+    darkToggle.textContent = "🌙";
+  }
+});
+
+// ====== Language Toggle ======
 langToggle.addEventListener("click", () => {
   isTamil = !isTamil;
   if (isTamil) {
@@ -45,19 +47,22 @@ langToggle.addEventListener("click", () => {
   } else {
     langToggle.textContent = "தமிழ்";
     heroText.textContent = "Paste link →";
-    subText.textContent = "YouTube, Instagram, Facebook, TikTok, Twitter & more. Original quality. No signup. 100% free.";
+    subText.textContent = "YouTube, Instagram, Facebook, TikTok & more. Original quality. No signup. 100% free.";
   }
 });
 
-// Format duration
+// ====== Current Year ======
+document.getElementById('year').textContent = new Date().getFullYear();
+
+// ====== Format Duration ======
 function formatDuration(seconds) {
   if (!seconds) return "N/A";
   const mins = Math.floor(seconds / 60);
   const secs = seconds % 60;
-  return `${mins}:${secs.toString().padStart(2, "0")}`;
+  return `${mins}:${secs.toString().padStart(2,"0")}`;
 }
 
-// Fetch video/media info
+// ====== Fetch Video Info ======
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
   const url = urlInput.value.trim();
@@ -75,7 +80,7 @@ form.addEventListener("submit", async (e) => {
       body: JSON.stringify({ url }),
     });
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Failed to fetch media info");
+    if (!res.ok) throw new Error(data.error || "Failed to fetch video info");
 
     currentInfo = data;
 
@@ -83,24 +88,23 @@ form.addEventListener("submit", async (e) => {
     titleEl.textContent = data.title || "Untitled";
     meta.textContent = `Uploader: ${data.uploader || "Unknown"} | Duration: ${formatDuration(data.duration)}`;
 
-    // Populate formats dynamically
+    // Populate formats
     qualitySelect.innerHTML = "";
-    if (data.formats && data.formats.length > 0) {
-      data.formats.forEach((f) => {
+    if (data.formats && data.formats.length) {
+      data.formats.forEach(f => {
         const opt = document.createElement("option");
-        const type = f.ext === "jpg" || f.ext === "png" ? "Image" :
-                     f.acodec && !f.vcodec ? "Audio" :
-                     f.vcodec ? "Video" : "Unknown";
+        const resText = f.resolution || (f.acodec && !f.vcodec ? "Audio" : "Unknown");
         opt.value = f.format_id;
-        opt.textContent = `${type} (${f.ext}) ${f.height ? f.height + "p" : ""}`;
+        opt.textContent = `${resText} (${f.ext})`;
         qualitySelect.appendChild(opt);
       });
-    } else qualitySelect.innerHTML = `<option value="best">Best</option>`;
+    } else {
+      qualitySelect.innerHTML = `<option value="best">Best</option>`;
+    }
 
     preview.classList.remove("hidden");
     downloadBtn.disabled = false;
   } catch (err) {
-    console.error(err);
     errorEl.textContent = err.message || "Something went wrong!";
     errorEl.classList.remove("hidden");
   } finally {
@@ -108,7 +112,7 @@ form.addEventListener("submit", async (e) => {
   }
 });
 
-// Download media
+// ====== Download Video ======
 downloadBtn.addEventListener("click", async () => {
   if (!currentInfo) return;
 
@@ -130,9 +134,9 @@ downloadBtn.addEventListener("click", async () => {
     }
 
     const blob = await response.blob();
-    const selectedFormat = currentInfo.formats.find((f) => f.format_id == itag);
+    const selectedFormat = currentInfo.formats.find(f => f.format_id == itag);
     const ext = selectedFormat?.ext || "mp4";
-    const safeTitle = (currentInfo.title || "media").replace(/[^a-z0-9]/gi, "_").substring(0, 50);
+    const safeTitle = (currentInfo.title || "video").replace(/[^a-z0-9]/gi, "_").substring(0,50);
 
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
@@ -141,7 +145,6 @@ downloadBtn.addEventListener("click", async () => {
     URL.revokeObjectURL(a.href);
   } catch (err) {
     alert(err.message);
-    console.error("Download error:", err);
   } finally {
     downloadBtn.textContent = "Download";
     downloadBtn.disabled = false;
