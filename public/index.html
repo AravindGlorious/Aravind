@@ -204,6 +204,26 @@
       toggle.textContent = "🌙"; // switch to moon icon
     }
   });
+    // 🌐 Language Toggle
+const langToggle = document.getElementById("langToggle");
+const heroText = document.getElementById("heroText");
+const subText = document.getElementById("subText");
+let isTamil = false;
+
+langToggle.addEventListener("click", () => {
+  isTamil = !isTamil;
+  if (isTamil) {
+    langToggle.textContent = "English";
+    heroText.textContent = "லிங்க் ஒட்டு →";
+    subText.textContent =
+      "YouTube, Instagram, Facebook, TikTok & மேலும். அசல் தரம். பதிவு தேவையில்லை. 100% இலவசம்.";
+  } else {
+    langToggle.textContent = "தமிழ்";
+    heroText.textContent = "Paste link →";
+    subText.textContent =
+      "YouTube, Instagram, Facebook, TikTok, Twitter & more. Original quality. No signup. 100% free.";
+  }
+});
 
   // Current year
   document.getElementById('year').textContent = new Date().getFullYear();
