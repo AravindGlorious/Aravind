@@ -1,3 +1,6 @@
+// ========================
+// DOM Elements
+// ========================
 const form = document.getElementById("dl-form");
 const urlInput = document.getElementById("url");
 const checkBtn = document.getElementById("checkBtn");
@@ -9,32 +12,38 @@ const titleEl = document.getElementById("title");
 const meta = document.getElementById("meta");
 const errorEl = document.getElementById("error");
 const qualitySelect = document.getElementById("quality");
+
 let currentInfo = null;
 
-// ✅ Dark Mode Toggle with LocalStorage + Icon
-const toggle = document.getElementById("darkToggle");
+// ========================
+// Dark Mode Toggle
+// ========================
+const darkToggle = document.getElementById("darkToggle");
 const root = document.documentElement;
 
 // Load saved theme
 if (localStorage.getItem("theme") === "dark") {
   root.classList.add("dark");
-  toggle.textContent = "☀️"; // light icon
+  darkToggle.textContent = "☀️";
 } else {
-  toggle.textContent = "🌙"; // dark icon
+  darkToggle.textContent = "🌙";
 }
 
-toggle.addEventListener("click", () => {
+// Toggle dark mode
+darkToggle.addEventListener("click", () => {
   root.classList.toggle("dark");
   if (root.classList.contains("dark")) {
     localStorage.setItem("theme", "dark");
-    toggle.textContent = "☀️";
+    darkToggle.textContent = "☀️";
   } else {
     localStorage.setItem("theme", "light");
-    toggle.textContent = "🌙";
+    darkToggle.textContent = "🌙";
   }
 });
 
-// 🌐 Language Toggle
+// ========================
+// Language Toggle
+// ========================
 const langToggle = document.getElementById("langToggle");
 const heroText = document.getElementById("heroText");
 const subText = document.getElementById("subText");
@@ -51,11 +60,13 @@ langToggle.addEventListener("click", () => {
     langToggle.textContent = "தமிழ்";
     heroText.textContent = "Paste link →";
     subText.textContent =
-      "YouTube, Instagram, Facebook, TikTok & more. Original quality. No signup. 100% free.";
+      "YouTube, Instagram, Facebook, TikTok, Twitter & more. Original quality. No signup. 100% free.";
   }
 });
 
-// 🕒 Format duration
+// ========================
+// Format Duration Helper
+// ========================
 function formatDuration(seconds) {
   if (!seconds) return "N/A";
   const mins = Math.floor(seconds / 60);
@@ -63,7 +74,9 @@ function formatDuration(seconds) {
   return `${mins}:${secs.toString().padStart(2, "0")}`;
 }
 
-// 🎬 Fetch Video Info
+// ========================
+// Fetch Video Info
+// ========================
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
   const url = urlInput.value.trim();
@@ -80,6 +93,7 @@ form.addEventListener("submit", async (e) => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ url }),
     });
+
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || "Failed to fetch video info");
 
@@ -91,7 +105,7 @@ form.addEventListener("submit", async (e) => {
       data.duration
     )}`;
 
-    // Populate formats
+    // Populate quality options
     qualitySelect.innerHTML = "";
     if (data.formats && data.formats.length > 0) {
       data.formats.forEach((f) => {
@@ -116,7 +130,9 @@ form.addEventListener("submit", async (e) => {
   }
 });
 
-// ⬇️ Download Video
+// ========================
+// Download Video
+// ========================
 downloadBtn.addEventListener("click", async () => {
   if (!currentInfo) return;
 
