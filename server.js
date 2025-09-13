@@ -1,46 +1,87 @@
 import express from "express";
-import fs from "fs";
+import cors from "cors";
+import bodyParser from "body-parser";
+import { execFile } from "child_process";
 import path from "path";
-import { getInfo, downloadVideo } from "./utils/ytdlp.js";
+import fs from "fs";
+import { fileURLToPath } from "url";
+import ytDlp from "yt-dlp-exec"; // npm install yt-dlp-exec
 
 const app = express();
-app.use(express.json());
-app.use(express.static("public"));
+const port = process.env.PORT || 5000;
 
-// Video info
+// ====== Middlewares ======
+app.use(cors());
+app.use(bodyParser.json());
+
+// Helper paths
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// ====== /api/info ======
 app.post("/api/info", async (req, res) => {
-  try {
-    const { url } = req.body;
-    if (!url) return res.status(400).json({ error: "No URL provided" });
+  const { url } = req.body;
+  if (!url) return res.status(400).json({ error: "URL required" });
 
-    const info = await getInfo(url);
-    res.json(info);
+  try {
+    const info = await ytDlp(url, {
+      dumpSingleJson: true,
+      noWarnings: true,
+      noCallHome: true,
+      preferFreeFormats: true,
+      addHeader: ["referer:youtube.com", "user-agent:googlebot"],
+    });
+
+    // Filter useful fields
+    const response = {
+      title: info.title,
+      thumbnail: info.thumbnail,
+      uploader: info.uploader,
+      duration: info.duration,
+      webpage_url: info.webpage_url,
+      formats: info.formats.map((f) => ({
+        itag: f.format_id,
+        ext: f.ext,
+        resolution: f.resolution || (f.height ? `${f.height}p` : null),
+        acodec: f.acodec,
+        vcodec: f.vcodec,
+        filesize: f.filesize || f.filesize_approx || null,
+      })),
+    };
+
+    res.json(response);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error("yt-dlp info error:", err);
+    res.status(500).json({ error: "Failed to fetch video info" });
   }
 });
 
-// Download
+// ====== /api/download ======
 app.post("/api/download", async (req, res) => {
+  const { url, itag } = req.body;
+  if (!url || !itag) return res.status(400).json({ error: "URL & itag required" });
+
   try {
-    const { url, itag } = req.body;
-    if (!url || !itag) return res.status(400).json({ error: "URL and itag required" });
+    const tempFile = path.join(__dirname, `temp_${Date.now()}.mp4`);
 
-    const file = `video_${Date.now()}.mp4`;
-    const outputPath = path.join("/tmp", file);
+    // Download with yt-dlp
+    await ytDlp(url, {
+      format: itag,
+      output: tempFile,
+    });
 
-    await downloadVideo(url, itag, outputPath);
-
-    res.download(outputPath, file, err => {
-      if (err) console.error(err);
-      fs.unlinkSync(outputPath);
+    // Stream file to client
+    res.download(tempFile, (err) => {
+      if (err) console.error("Download stream error:", err);
+      fs.unlink(tempFile, () => {}); // cleanup temp file
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error("yt-dlp download error:", err);
+    res.status(500).json({ error: "Download failed" });
   }
 });
 
-const PORT = process.env.PORT || 10000;
-app.listen(PORT, "0.0.0.0", () => {
-  console.log(`✅ Server running on http://0.0.0.0:${PORT}`);
+// ====== Start Server ======
+app.listen(port, () => {
+  console.log(`🚀 Server running on http://localhost:${port}`);
 });
