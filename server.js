@@ -17,18 +17,25 @@ app.use(bodyParser.json());
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// ====== /api/info ======
+// Cookies (optional for restricted YouTube videos)
+const cookiesFile = path.join(__dirname, "cookies.txt");
+const ytDlpOptions = {
+  noWarnings: true,
+  noCallHome: true,
+  preferFreeFormats: true,
+  addHeader: ["referer:youtube.com", "user-agent:googlebot"],
+  cookies: fs.existsSync(cookiesFile) ? cookiesFile : undefined,
+};
+
+// ===== /api/info =====
 app.post("/api/info", async (req, res) => {
   const { url } = req.body;
   if (!url) return res.status(400).json({ error: "URL required" });
 
   try {
     const info = await ytDlp(url, {
+      ...ytDlpOptions,
       dumpSingleJson: true,
-      noWarnings: true,
-      noCallHome: true,
-      preferFreeFormats: true,
-      addHeader: ["referer:youtube.com", "user-agent:googlebot"],
     });
 
     const response = {
@@ -37,47 +44,55 @@ app.post("/api/info", async (req, res) => {
       uploader: info.uploader,
       duration: info.duration,
       webpage_url: info.webpage_url,
-      formats: info.formats.map((f) => ({
+      formats: info.formats?.map((f) => ({
         itag: f.format_id,
         ext: f.ext,
-        resolution: f.resolution || (f.height ? `${f.height}p` : null),
+        resolution: f.resolution || (f.height ? `${f.height}p` : f.format_note || "audio"),
         acodec: f.acodec,
         vcodec: f.vcodec,
         filesize: f.filesize || f.filesize_approx || null,
-      })),
+      })) || [],
     };
 
     res.json(response);
   } catch (err) {
-    console.error("yt-dlp info error:", err);
-    res.status(500).json({ error: "Failed to fetch video info" });
+    console.error("yt-dlp info error:", err.message);
+    res.status(500).json({
+      error:
+        "Failed to fetch video info. It might be restricted or require cookies.",
+      details: err.message,
+    });
   }
 });
 
-// ====== /api/download ======
+// ===== /api/download =====
 app.post("/api/download", async (req, res) => {
   const { url, itag } = req.body;
   if (!url || !itag) return res.status(400).json({ error: "URL & itag required" });
 
-  try {
-    const tempFile = path.join(__dirname, `temp_${Date.now()}.mp4`);
+  const tempFile = path.join(__dirname, `temp_${Date.now()}.mp4`);
 
+  try {
     await ytDlp(url, {
+      ...ytDlpOptions,
       format: itag,
       output: tempFile,
     });
 
     res.download(tempFile, (err) => {
-      if (err) console.error("Download stream error:", err);
-      fs.unlink(tempFile, () => {}); // Cleanup temp file
+      if (err) console.error("Download error:", err);
+      fs.unlink(tempFile, () => {}); // cleanup temp file
     });
   } catch (err) {
-    console.error("yt-dlp download error:", err);
-    res.status(500).json({ error: "Download failed" });
+    console.error("yt-dlp download error:", err.message);
+    res.status(500).json({
+      error: "Download failed. Video may be restricted or invalid.",
+      details: err.message,
+    });
   }
 });
 
-// ===== Serve Frontend =====
+// ===== Serve frontend =====
 app.use(express.static(path.join(__dirname, "public")));
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
