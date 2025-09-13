@@ -1,6 +1,4 @@
-// ========================
-// DOM Elements
-// ========================
+// ====== DOM Elements ======
 const form = document.getElementById("dl-form");
 const urlInput = document.getElementById("url");
 const checkBtn = document.getElementById("checkBtn");
@@ -12,24 +10,22 @@ const titleEl = document.getElementById("title");
 const meta = document.getElementById("meta");
 const errorEl = document.getElementById("error");
 const qualitySelect = document.getElementById("quality");
+const darkToggle = document.getElementById("darkToggle");
+const langToggle = document.getElementById("langToggle");
+const heroText = document.getElementById("heroText");
+const subText = document.getElementById("subText");
 
 let currentInfo = null;
+let isTamil = false;
 
-// ========================
-// Dark Mode Toggle
-// ========================
-const darkToggle = document.getElementById("darkToggle");
+// ====== Dark Mode Toggle ======
 const root = document.documentElement;
-
-// Load saved theme
 if (localStorage.getItem("theme") === "dark") {
   root.classList.add("dark");
   darkToggle.textContent = "☀️";
 } else {
   darkToggle.textContent = "🌙";
 }
-
-// Toggle dark mode
 darkToggle.addEventListener("click", () => {
   root.classList.toggle("dark");
   if (root.classList.contains("dark")) {
@@ -41,42 +37,32 @@ darkToggle.addEventListener("click", () => {
   }
 });
 
-// ========================
-// Language Toggle
-// ========================
-const langToggle = document.getElementById("langToggle");
-const heroText = document.getElementById("heroText");
-const subText = document.getElementById("subText");
-let isTamil = false;
-
+// ====== Language Toggle ======
 langToggle.addEventListener("click", () => {
   isTamil = !isTamil;
   if (isTamil) {
     langToggle.textContent = "English";
     heroText.textContent = "லிங்க் ஒட்டு →";
-    subText.textContent =
-      "YouTube, Instagram, Facebook, TikTok & மேலும். அசல் தரம். பதிவு தேவையில்லை. 100% இலவசம்.";
+    subText.textContent = "YouTube, Instagram, Facebook, TikTok & மேலும். அசல் தரம். பதிவு தேவையில்லை. 100% இலவசம்.";
   } else {
     langToggle.textContent = "தமிழ்";
     heroText.textContent = "Paste link →";
-    subText.textContent =
-      "YouTube, Instagram, Facebook, TikTok, Twitter & more. Original quality. No signup. 100% free.";
+    subText.textContent = "YouTube, Instagram, Facebook, TikTok & more. Original quality. No signup. 100% free.";
   }
 });
 
-// ========================
-// Format Duration Helper
-// ========================
+// ====== Current Year ======
+document.getElementById('year').textContent = new Date().getFullYear();
+
+// ====== Format Duration ======
 function formatDuration(seconds) {
   if (!seconds) return "N/A";
   const mins = Math.floor(seconds / 60);
   const secs = seconds % 60;
-  return `${mins}:${secs.toString().padStart(2, "0")}`;
+  return `${mins}:${secs.toString().padStart(2,"0")}`;
 }
 
-// ========================
-// Fetch Video Info
-// ========================
+// ====== Fetch Video Info ======
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
   const url = urlInput.value.trim();
@@ -93,7 +79,6 @@ form.addEventListener("submit", async (e) => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ url }),
     });
-
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || "Failed to fetch video info");
 
@@ -101,14 +86,12 @@ form.addEventListener("submit", async (e) => {
 
     thumb.src = data.thumbnail || "";
     titleEl.textContent = data.title || "Untitled";
-    meta.textContent = `Uploader: ${data.uploader || "Unknown"} | Duration: ${formatDuration(
-      data.duration
-    )}`;
+    meta.textContent = `Uploader: ${data.uploader || "Unknown"} | Duration: ${formatDuration(data.duration)}`;
 
-    // Populate quality options
+    // Populate formats
     qualitySelect.innerHTML = "";
-    if (data.formats && data.formats.length > 0) {
-      data.formats.forEach((f) => {
+    if (data.formats && data.formats.length) {
+      data.formats.forEach(f => {
         const opt = document.createElement("option");
         const resText = f.resolution || (f.acodec && !f.vcodec ? "Audio" : "Unknown");
         opt.value = f.format_id;
@@ -122,7 +105,6 @@ form.addEventListener("submit", async (e) => {
     preview.classList.remove("hidden");
     downloadBtn.disabled = false;
   } catch (err) {
-    console.error(err);
     errorEl.textContent = err.message || "Something went wrong!";
     errorEl.classList.remove("hidden");
   } finally {
@@ -130,9 +112,7 @@ form.addEventListener("submit", async (e) => {
   }
 });
 
-// ========================
-// Download Video
-// ========================
+// ====== Download Video ======
 downloadBtn.addEventListener("click", async () => {
   if (!currentInfo) return;
 
@@ -154,11 +134,9 @@ downloadBtn.addEventListener("click", async () => {
     }
 
     const blob = await response.blob();
-    const selectedFormat = currentInfo.formats.find((f) => f.format_id == itag);
+    const selectedFormat = currentInfo.formats.find(f => f.format_id == itag);
     const ext = selectedFormat?.ext || "mp4";
-    const safeTitle = (currentInfo.title || "video")
-      .replace(/[^a-z0-9]/gi, "_")
-      .substring(0, 50);
+    const safeTitle = (currentInfo.title || "video").replace(/[^a-z0-9]/gi, "_").substring(0,50);
 
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
@@ -167,7 +145,6 @@ downloadBtn.addEventListener("click", async () => {
     URL.revokeObjectURL(a.href);
   } catch (err) {
     alert(err.message);
-    console.error("Download error:", err);
   } finally {
     downloadBtn.textContent = "Download";
     downloadBtn.disabled = false;
