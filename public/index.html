@@ -65,6 +65,10 @@
       <p class="text-gray-600 dark:text-gray-300 text-lg md:text-xl max-w-2xl mx-auto">
         Fast, secure, and free video downloader for YouTube, Instagram, Facebook, TikTok, Twitter & more.
       </p>
+      <!-- Language toggle button -->
+    <button id="langToggle" class="mt-4 px-4 py-2 rounded bg-indigo-600 text-white">
+      தமிழ்
+    </button>
     </section>
 
     <!-- Input Card -->
@@ -182,13 +186,32 @@
   </footer>
 
   <script>
-    // Dark mode toggle
-    document.getElementById('darkToggle').addEventListener('click', () => {
-      document.documentElement.classList.toggle('dark');
-    });
-    // Current year
-    document.getElementById('year').textContent = new Date().getFullYear();
-  </script>
+  const toggle = document.getElementById('darkToggle');
+  const root = document.documentElement;
+
+  // Load saved theme
+  if (localStorage.getItem("theme") === "dark") {
+    root.classList.add("dark");
+    toggle.textContent = "☀️"; // light icon
+  } else {
+    toggle.textContent = "🌙"; // dark icon
+  }
+
+  // Toggle event
+  toggle.addEventListener("click", () => {
+    root.classList.toggle("dark");
+    if (root.classList.contains("dark")) {
+      localStorage.setItem("theme", "dark");
+      toggle.textContent = "☀️"; // switch to sun icon
+    } else {
+      localStorage.setItem("theme", "light");
+      toggle.textContent = "🌙"; // switch to moon icon
+    }
+  });
+
+  // Current year
+  document.getElementById('year').textContent = new Date().getFullYear();
+</script>
 
   <script src="/js/app.js"></script>
 </body>
