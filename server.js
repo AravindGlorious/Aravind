@@ -1,20 +1,19 @@
 import express from "express";
 import cors from "cors";
 import bodyParser from "body-parser";
-import { execFile } from "child_process";
+import { fileURLToPath } from "url";
 import path from "path";
 import fs from "fs";
-import { fileURLToPath } from "url";
 import ytDlp from "yt-dlp-exec"; // npm install yt-dlp-exec
 
 const app = express();
 const port = process.env.PORT || 5000;
 
-// ====== Middlewares ======
+// ===== Middlewares =====
 app.use(cors());
 app.use(bodyParser.json());
 
-// Helper paths
+// Paths
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -32,7 +31,6 @@ app.post("/api/info", async (req, res) => {
       addHeader: ["referer:youtube.com", "user-agent:googlebot"],
     });
 
-    // Filter useful fields
     const response = {
       title: info.title,
       thumbnail: info.thumbnail,
@@ -64,16 +62,14 @@ app.post("/api/download", async (req, res) => {
   try {
     const tempFile = path.join(__dirname, `temp_${Date.now()}.mp4`);
 
-    // Download with yt-dlp
     await ytDlp(url, {
       format: itag,
       output: tempFile,
     });
 
-    // Stream file to client
     res.download(tempFile, (err) => {
       if (err) console.error("Download stream error:", err);
-      fs.unlink(tempFile, () => {}); // cleanup temp file
+      fs.unlink(tempFile, () => {}); // cleanup
     });
   } catch (err) {
     console.error("yt-dlp download error:", err);
@@ -81,7 +77,13 @@ app.post("/api/download", async (req, res) => {
   }
 });
 
-// ====== Start Server ======
+// ===== Serve frontend =====
+app.use(express.static(path.join(__dirname, "public")));
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
+});
+
+// ===== Start Server =====
 app.listen(port, () => {
-  console.log(`🚀 Server running on http://localhost:${port}`);
+  console.log(`🚀 Server running at http://localhost:${port}`);
 });
