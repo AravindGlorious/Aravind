@@ -69,7 +69,7 @@ app.post("/api/download", async (req, res) => {
 
     res.download(tempFile, (err) => {
       if (err) console.error("Download stream error:", err);
-      fs.unlink(tempFile, () => {}); // cleanup
+      fs.unlink(tempFile, () => {}); // Cleanup temp file
     });
   } catch (err) {
     console.error("yt-dlp download error:", err);
@@ -77,7 +77,7 @@ app.post("/api/download", async (req, res) => {
   }
 });
 
-// ===== Serve frontend =====
+// ===== Serve Frontend =====
 app.use(express.static(path.join(__dirname, "public")));
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
