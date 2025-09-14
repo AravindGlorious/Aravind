@@ -31,8 +31,8 @@ form.addEventListener("submit", async (e) => {
       body: JSON.stringify({ url }),
     });
 
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Failed to fetch info");
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data?.error || "Failed to fetch video info");
 
     videoInfo = data;
 
@@ -46,24 +46,21 @@ form.addEventListener("submit", async (e) => {
 
     // Populate quality dropdown
     qualitySelect.innerHTML = "";
-    if (data.formats && data.formats.length) {
+    if (data.formats?.length) {
       data.formats.forEach((f) => {
         const opt = document.createElement("option");
         const resText = f.resolution || (f.acodec && !f.vcodec ? "Audio" : "Unknown");
         opt.value = f.itag;
-        opt.textContent = `${resText} (${f.ext})`;
+        opt.textContent = `${resText} (${f.ext || "?"})`;
         qualitySelect.appendChild(opt);
       });
     } else {
-      const opt = document.createElement("option");
-      opt.value = "best";
-      opt.textContent = "Best";
-      qualitySelect.appendChild(opt);
+      qualitySelect.innerHTML = `<option value="best">Best</option>`;
     }
 
     downloadBtn.disabled = false;
   } catch (err) {
-    errorEl.textContent = err.message;
+    errorEl.textContent = err.message || "Something went wrong";
     errorEl.classList.remove("hidden");
   } finally {
     loader.classList.add("hidden");
@@ -75,8 +72,9 @@ downloadBtn.addEventListener("click", async () => {
   if (!videoInfo) return;
 
   let itag = qualitySelect.value;
-  // Fallback if best
-  if (itag === "best") itag = videoInfo.formats[0]?.itag;
+  if (itag === "best") {
+    itag = videoInfo.formats?.[0]?.itag || "best";
+  }
 
   downloadBtn.textContent = "Downloading...";
   downloadBtn.disabled = true;
@@ -88,12 +86,17 @@ downloadBtn.addEventListener("click", async () => {
       body: JSON.stringify({ url: videoInfo.webpage_url, itag }),
     });
 
-    if (!res.ok) throw new Error("Download failed");
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      throw new Error(errData?.error || "Download failed");
+    }
 
     const blob = await res.blob();
-    const selectedFormat = videoInfo.formats.find((f) => f.itag == itag);
+    const selectedFormat = videoInfo.formats?.find((f) => f.itag == itag);
     const ext = selectedFormat?.acodec && !selectedFormat?.vcodec ? "mp3" : "mp4";
-    const safeTitle = (videoInfo.title || "video").replace(/[^a-z0-9]/gi, "_").substring(0, 50);
+    const safeTitle = (videoInfo.title || "video")
+      .replace(/[^a-z0-9]/gi, "_")
+      .substring(0, 50);
 
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
@@ -103,7 +106,7 @@ downloadBtn.addEventListener("click", async () => {
     a.remove();
     URL.revokeObjectURL(a.href);
   } catch (err) {
-    alert(err.message);
+    alert(err.message || "Error while downloading");
     console.error("Download error:", err);
   } finally {
     downloadBtn.textContent = "Download";
