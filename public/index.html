@@ -6,14 +6,14 @@
   <title>QuickDownloader — Fast & Secure HD Video Downloader</title>
   <meta name="description" content="Download YouTube, Instagram, Facebook, TikTok, Twitter & more videos in HD. 100% free, fast, and secure with QuickDownloader.">
   <meta name="robots" content="index,follow">
-  <link rel="canonical" href="/" />
+  <link rel="canonical" href="https://quickdownloader.com/" />
 
   <!-- OG -->
   <meta property="og:title" content="QuickDownloader — Fast HD Video Downloader" />
   <meta property="og:description" content="Paste link → Download in 1 click. YouTube, Instagram, Facebook, TikTok, Twitter and more." />
   <meta property="og:type" content="website" />
   <meta property="og:image" content="/og-image.jpg" />
-  <meta property="og:url" content="/" />
+  <meta property="og:url" content="https://quickdownloader.com/" />
 
   <!-- Twitter -->
   <meta name="twitter:card" content="summary_large_image" />
@@ -22,6 +22,7 @@
   <meta name="twitter:image" content="/og-image.jpg" />
 
   <!-- Fonts + Tailwind -->
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" as="style">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
@@ -33,6 +34,16 @@
         }
       }
     }
+  </script>
+
+  <!-- Schema.org -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "QuickDownloader",
+    "url": "https://quickdownloader.com/"
+  }
   </script>
 </head>
 <body class="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 antialiased">
@@ -47,7 +58,7 @@
       </a>
 
       <!-- Mobile Menu Button -->
-      <button id="menuBtn" class="md:hidden text-2xl focus:outline-none" aria-label="Toggle menu">☰</button>
+      <button id="menuBtn" class="md:hidden text-2xl focus:outline-none" aria-label="Toggle menu" aria-expanded="false">☰</button>
 
       <!-- Nav Links -->
       <nav id="navLinks" class="hidden flex-col md:flex md:flex-row gap-6 text-sm md:text-base mt-4 md:mt-0">
@@ -68,9 +79,7 @@
 
     <!-- Hero -->
     <section class="text-center px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto">
-      <h1 id="heroText" class="text-3xl md:text-5xl font-extrabold mb-4">
-        Paste link →
-      </h1>
+      <h1 id="heroText" class="text-3xl md:text-5xl font-extrabold mb-4">Paste link →</h1>
       <p id="subText" class="text-gray-600 dark:text-gray-300 text-lg md:text-xl max-w-2xl mx-auto">
         YouTube, Instagram, Facebook, TikTok, Twitter & more. Original quality. No signup. 100% free.
       </p>
@@ -101,13 +110,22 @@
           </div>
         </form>
 
-        <!-- Preview + Loader -->
-        <div id="loader" class="hidden mt-6 text-indigo-600 text-sm text-center">Checking video…</div>
+        <!-- Loader + Preview -->
+        <div id="loader" class="hidden mt-6 text-indigo-600 text-sm text-center flex items-center justify-center">
+          <svg class="animate-spin h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+          </svg>
+          Checking video…
+        </div>
+
         <div id="preview" class="hidden mt-6 flex flex-col sm:flex-row items-center gap-4 text-left">
-          <img id="thumb" src="" alt="Preview" class="w-32 h-20 object-cover rounded-xl border">
+          <img id="thumb" src="" alt="Video preview thumbnail" class="w-32 h-20 object-cover rounded-xl border" loading="lazy">
           <div class="flex-1">
             <h3 id="title" class="font-semibold line-clamp-2 text-sm md:text-base"></h3>
             <p id="meta" class="text-xs md:text-sm text-gray-500 dark:text-gray-400"></p>
+            <!-- Download Options -->
+            <div id="downloadOptions" class="mt-2 flex flex-wrap gap-2"></div>
           </div>
         </div>
         <p id="error" class="hidden mt-4 text-sm text-red-600 text-center"></p>
@@ -218,13 +236,16 @@
     const menuBtn = document.getElementById("menuBtn");
     const navLinks = document.getElementById("navLinks");
     menuBtn.addEventListener("click", () => {
-      navLinks.classList.toggle("hidden");
+      const isHidden = navLinks.classList.toggle("hidden");
+      menuBtn.setAttribute("aria-expanded", !isHidden);
     });
 
-    // 🌙 Dark mode toggle
+    // 🌙 Dark mode toggle with memory
     const darkToggle = document.getElementById("darkToggle");
+    if (localStorage.getItem("theme") === "dark") document.documentElement.classList.add("dark");
     darkToggle.addEventListener("click", () => {
       document.documentElement.classList.toggle("dark");
+      localStorage.setItem("theme", document.documentElement.classList.contains("dark") ? "dark" : "light");
     });
   </script>
 
@@ -232,3 +253,4 @@
   <script src="/js/app.js"></script>
 </body>
 </html>
+
