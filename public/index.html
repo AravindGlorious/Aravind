@@ -8,73 +8,49 @@
   <meta name="robots" content="index,follow">
   <link rel="canonical" href="/" />
 
-  <!-- OG -->
-  <meta property="og:title" content="QuickDownloader — Fast HD Video Downloader" />
-  <meta property="og:description" content="Paste link → Download in 1 click. YouTube, Instagram, Facebook, TikTok, Twitter and more." />
-  <meta property="og:type" content="website" />
-  <meta property="og:image" content="/og-image.jpg" />
-  <meta property="og:url" content="/" />
-
-  <!-- Twitter -->
-  <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="QuickDownloader — Fast HD Video Downloader" />
-  <meta name="twitter:description" content="Free, fast, secure HD downloads from YouTube, Instagram, Facebook, TikTok, Twitter." />
-  <meta name="twitter:image" content="/og-image.jpg" />
-
+  <!-- Fonts + Tailwind -->
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
       darkMode: 'class',
-      theme: {
-        extend: {
-          fontFamily: { sans: ['Poppins', 'ui-sans-serif', 'system-ui'] },
-        }
-      }
+      theme: { extend: { fontFamily: { sans: ['Poppins', 'ui-sans-serif', 'system-ui'] } } }
     }
   </script>
 </head>
 <body class="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 antialiased">
 
-  <!-- Header -->
-  <header class="sticky top-0 backdrop-blur bg-white/80 dark:bg-gray-800/80 border-b border-gray-200 dark:border-gray-700 z-50">
-    <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-      <!-- Logo -->
-      <a href="/" class="flex items-center gap-3">
-        <img src="/favicon.svg" class="h-10 w-10 md:h-12 md:w-12" alt="QuickDownloader logo">
-        <span class="text-xl md:text-2xl font-bold">QuickDownloader</span>
-      </a>
+<!-- Header -->
+<header class="sticky top-0 backdrop-blur bg-white/80 dark:bg-gray-800/80 border-b border-gray-200 dark:border-gray-700 z-50">
+  <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+    <a href="/" class="flex items-center gap-3">
+      <img src="/favicon.svg" class="h-10 w-10 md:h-12 md:w-12" alt="QuickDownloader logo">
+      <span class="text-xl md:text-2xl font-bold">QuickDownloader</span>
+    </a>
+    <button id="menuBtn" class="md:hidden text-2xl focus:outline-none">☰</button>
+    <nav id="navLinks" class="hidden md:flex flex-col md:flex-row gap-6 text-sm md:text-base mt-4 md:mt-0">
+      <button id="langToggle" class="hover:underline">தமிழ்</button>
+      <button id="darkToggle" class="hover:underline px-3 py-1 bg-gray-200 dark:bg-gray-700 rounded text-gray-800 dark:text-gray-200">🌙</button>
+      <a class="hover:underline" href="/terms.html">Terms</a>
+      <a class="hover:underline" href="/privacy.html">Privacy</a>
+      <a class="hover:underline" href="/faq.html">FAQ</a>
+      <a class="hover:underline" href="/blog.html">Blog</a>
+      <a class="hover:underline" href="/about.html">About</a>
+      <a class="hover:underline" href="/contact.html">Contact</a>
+    </nav>
+  </div>
+</header>
 
-      <!-- Mobile Menu Button -->
-      <button id="menuBtn" class="md:hidden text-2xl focus:outline-none">☰</button>
+<!-- Hero -->
+<main class="pt-16 md:pt-24">
+  <section class="text-center px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto">
+    <h1 id="heroText" class="text-3xl md:text-5xl font-extrabold mb-4">Paste link →</h1>
+    <p id="subText" class="text-gray-600 dark:text-gray-300 text-lg md:text-xl max-w-2xl mx-auto">
+      YouTube, Instagram, Facebook, TikTok, Twitter & more. Original quality. No signup. 100% free.
+    </p>
+  </section>
 
-      <!-- Nav Links -->
-      <nav id="navLinks" class="hidden md:flex flex-col md:flex-row gap-6 text-sm md:text-base mt-4 md:mt-0">
-        <button id="langToggle" class="hover:underline">தமிழ்</button>
-        <button id="darkToggle" class="hover:underline px-3 py-1 bg-gray-200 dark:bg-gray-700 rounded text-gray-800 dark:text-gray-200">🌙</button>
-        <a class="hover:underline" href="/terms.html">Terms</a>
-        <a class="hover:underline" href="/privacy.html">Privacy</a>
-        <a class="hover:underline" href="/faq.html">FAQ</a>
-        <a class="hover:underline" href="/blog.html">Blog</a>
-        <a class="hover:underline" href="/about.html">About</a>
-        <a class="hover:underline" href="/contact.html">Contact</a>
-      </nav>
-    </div>
-  </header>
-
-  <!-- Hero -->
-  <main class="pt-16 md:pt-24">
-    <section class="text-center px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto">
-      <h1 id="heroText" class="text-3xl md:text-5xl font-extrabold mb-4">
-        Paste link →
-      </h1>
-      <p id="subText" class="text-gray-600 dark:text-gray-300 text-lg md:text-xl max-w-2xl mx-auto">
-        YouTube, Instagram, Facebook, TikTok, Twitter & more. Original quality. No signup. 100% free.
-      </p>
-    </section>
-  </main>
-
-  <!-- Input Card -->
+  <!-- Single Video Downloader -->
   <section>
     <div class="mt-10 bg-white dark:bg-gray-800 shadow-xl rounded-2xl p-5 md:p-6 max-w-3xl mx-auto">
       <form id="dl-form" class="flex flex-col md:flex-row gap-3 items-center">
@@ -82,7 +58,6 @@
           placeholder="Paste video link here (YouTube, Instagram, Facebook, TikTok, Twitter...)" 
           class="flex-1 rounded-xl border border-gray-200 dark:border-gray-700 px-4 py-3 text-sm md:text-base outline-none 
                  focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 dark:bg-gray-900 dark:text-white" />
-
         <select id="quality" class="rounded-xl border border-gray-200 dark:border-gray-700 px-3 py-3 text-sm md:text-base dark:bg-gray-900 dark:text-white md:flex-shrink-0 w-full md:w-auto">
           <option value="best">Best</option>
           <option value="1080p">1080p</option>
@@ -90,7 +65,6 @@
           <option value="480p">480p</option>
           <option value="audio">Audio Only (mp3)</option>
         </select>
-
         <div class="flex flex-col md:flex-row gap-3 w-full md:w-auto">
           <button id="checkBtn" type="submit"
             class="rounded-xl px-5 py-3 bg-indigo-600 text-white font-semibold hover:bg-indigo-700 w-full md:w-auto">Check</button>
@@ -98,8 +72,6 @@
             class="rounded-xl px-5 py-3 bg-gray-900 text-white font-semibold hover:bg-black w-full md:w-auto" disabled>Download</button>
         </div>
       </form>
-
-      <!-- Preview + Loader -->
       <div id="loader" class="hidden mt-6 text-indigo-600 text-sm text-center">Checking video…</div>
       <div id="preview" class="hidden mt-6 flex flex-col sm:flex-row items-center gap-4 text-left">
         <img id="thumb" src="" alt="Preview" class="w-32 h-20 object-cover rounded-xl border">
@@ -112,114 +84,92 @@
     </div>
   </section>
 
-  <!-- Features -->
-  <section class="py-12 bg-gray-50 dark:bg-gray-900">
-    <div class="max-w-5xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 px-4">
-      <div class="p-6 rounded-xl shadow-md text-center bg-white dark:bg-gray-800">
-        <h3 class="font-bold text-xl mb-2">⚡ Fast Download</h3>
-        <p>Get videos in seconds with optimized servers.</p>
-      </div>
-      <div class="p-6 rounded-xl shadow-md text-center bg-white dark:bg-gray-800">
-        <h3 class="font-bold text-xl mb-2">🔒 Security</h3>
-        <p>Safe, privacy-friendly downloads. No login needed.</p>
-      </div>
-      <div class="p-6 rounded-xl shadow-md text-center bg-white dark:bg-gray-800">
-        <h3 class="font-bold text-xl mb-2">📱 All Devices</h3>
-        <p>Works on mobile, tablet, and desktop browsers.</p>
-      </div>
-    </div>
+  <!-- Bulk Downloader -->
+  <section class="max-w-3xl mx-auto mt-12 px-6 py-8 bg-white dark:bg-gray-800 shadow-xl rounded-2xl">
+    <h2 class="text-2xl font-bold mb-4 text-center">Bulk Downloader</h2>
+    <form id="bulkForm" class="flex flex-col gap-4">
+      <textarea id="bulkUrls" placeholder="Paste multiple video URLs (one per line)" rows="6"
+        class="p-3 border rounded dark:bg-gray-900 dark:text-white"></textarea>
+      <button type="submit"
+        class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded shadow">Download All</button>
+    </form>
+    <div id="bulkStatus" class="mt-4 text-sm text-gray-600 dark:text-gray-300 text-center"></div>
   </section>
+</main>
 
-  <!-- How to Download -->
-  <section class="py-16 px-4 max-w-4xl mx-auto text-center">
-    <h2 class="text-2xl font-bold mb-6">How to Download Videos?</h2>
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-      <div class="p-6 rounded-lg bg-white dark:bg-gray-800 shadow">
-        <h3 class="font-semibold">1. Paste Link</h3>
-        <p class="text-sm mt-2">Copy your video link & paste it into the box.</p>
-      </div>
-      <div class="p-6 rounded-lg bg-white dark:bg-gray-800 shadow">
-        <h3 class="font-semibold">2. Check Info</h3>
-        <p class="text-sm mt-2">Preview the video & choose quality.</p>
-      </div>
-      <div class="p-6 rounded-lg bg-white dark:bg-gray-800 shadow">
-        <h3 class="font-semibold">3. Download</h3>
-        <p class="text-sm mt-2">Click download & save instantly.</p>
-      </div>
+<!-- Footer -->
+<footer class="border-t bg-white dark:bg-gray-800">
+  <div class="max-w-5xl mx-auto px-6 py-8 flex flex-col md:flex-row items-center justify-between text-sm text-gray-500 dark:text-gray-400">
+    <p>© <span id="year"></span> QuickDownloader. All rights reserved.</p>
+    <div class="flex flex-wrap gap-4 mt-3 md:mt-0">
+      <a class="hover:underline" href="/terms.html">Terms</a>
+      <a class="hover:underline" href="/privacy.html">Privacy</a>
+      <a class="hover:underline" href="/faq.html">FAQ</a>
+      <a class="hover:underline" href="/blog.html">Blog</a>
+      <a class="hover:underline" href="/about.html">About</a>
+      <a class="hover:underline" href="/contact.html">Contact</a>
     </div>
-  </section>
+  </div>
+</footer>
 
-  <!-- FAQ -->
-  <section class="py-16 bg-gray-100 dark:bg-gray-800 px-4">
-    <h2 class="text-2xl font-bold text-center mb-8">Frequently Asked Questions</h2>
-    <div class="max-w-3xl mx-auto space-y-6">
-      <div>
-        <h3 class="font-semibold">Is QuickDownloader free?</h3>
-        <p class="text-sm">Yes! It’s 100% free. No signup required.</p>
-      </div>
-      <div>
-        <h3 class="font-semibold">Can I use it on my phone?</h3>
-        <p class="text-sm">Absolutely. Works on Android, iPhone, and PC.</p>
-      </div>
-      <div>
-        <h3 class="font-semibold">Do I need to install software?</h3>
-        <p class="text-sm">No installation needed. Use directly in browser.</p>
-      </div>
-      <div>
-        <h3 class="font-semibold">Does it support HD quality?</h3>
-        <p class="text-sm">Yes. Download in 1080p, 720p, or audio only.</p>
-      </div>
-    </div>
-  </section>
-  </main>
+<script>
+  // Language toggle
+  const langToggle = document.getElementById("langToggle");
+  const heroText = document.getElementById("heroText");
+  const subText = document.getElementById("subText");
+  let isTamil = false;
+  langToggle.addEventListener("click", () => {
+    isTamil = !isTamil;
+    if (isTamil) {
+      langToggle.textContent = "English";
+      heroText.textContent = "லிங்க் ஒட்டு →";
+      subText.textContent = "YouTube, Instagram, Facebook, TikTok & மேலும். அசல் தரம். பதிவு தேவையில்லை. 100% இலவசம்.";
+    } else {
+      langToggle.textContent = "தமிழ்";
+      heroText.textContent = "Paste link →";
+      subText.textContent = "YouTube, Instagram, Facebook, TikTok, Twitter & more. Original quality. No signup. 100% free.";
+    }
+  });
 
-  <!-- Footer -->
-  <footer class="border-t bg-white dark:bg-gray-800">
-    <div class="max-w-5xl mx-auto px-6 py-8 flex flex-col md:flex-row items-center justify-between text-sm text-gray-500 dark:text-gray-400">
-      <p>© <span id="year"></span> QuickDownloader. All rights reserved.</p>
-      <div class="flex flex-wrap gap-4 mt-3 md:mt-0">
-        <a class="hover:underline" href="/terms.html">Terms</a>
-        <a class="hover:underline" href="/privacy.html">Privacy</a>
-        <a class="hover:underline" href="/faq.html">FAQ</a>
-        <a class="hover:underline" href="/blog.html">Blog</a>
-        <a class="hover:underline" href="/about.html">About</a>
-        <a class="hover:underline" href="/contact.html">Contact</a>
-      </div>
-    </div>
-  </footer>
+  // Current year
+  document.getElementById('year').textContent = new Date().getFullYear();
 
-  <!-- Language toggle, mobile menu & current year -->
-  <script>
-    const langToggle = document.getElementById("langToggle");
-    const heroText = document.getElementById("heroText");
-    const subText = document.getElementById("subText");
-    let isTamil = false;
+  // Mobile menu toggle
+  const menuBtn = document.getElementById("menuBtn");
+  const navLinks = document.getElementById("navLinks");
+  menuBtn.addEventListener("click", () => navLinks.classList.toggle("hidden"));
 
-    langToggle.addEventListener("click", () => {
-      isTamil = !isTamil;
-      if (isTamil) {
-        langToggle.textContent = "English";
-        heroText.textContent = "லிங்க் ஒட்டு →";
-        subText.textContent = "YouTube, Instagram, Facebook, TikTok & மேலும். அசல் தரம். பதிவு தேவையில்லை. 100% இலவசம்.";
-      } else {
-        langToggle.textContent = "தமிழ்";
-        heroText.textContent = "Paste link →";
-        subText.textContent = "YouTube, Instagram, Facebook, TikTok, Twitter & more. Original quality. No signup. 100% free.";
-      }
-    });
+  // Bulk download
+  const bulkForm = document.getElementById("bulkForm");
+  const bulkUrls = document.getElementById("bulkUrls");
+  const bulkStatus = document.getElementById("bulkStatus");
 
-    // Current year
-    document.getElementById('year').textContent = new Date().getFullYear();
+  bulkForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const urls = bulkUrls.value.trim().split("\n").filter(u => u.length > 0);
+    if (urls.length === 0) { bulkStatus.textContent = "Paste at least one link."; return; }
+    bulkStatus.textContent = "Preparing your downloads...";
 
-    // Mobile menu toggle
-    const menuBtn = document.getElementById("menuBtn");
-    const navLinks = document.getElementById("navLinks");
-    menuBtn.addEventListener("click", () => {
-      navLinks.classList.toggle("hidden");
-    });
-  </script>
+    try {
+      const response = await fetch("/bulk-download", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ urls })
+      });
+      if (!response.ok) { bulkStatus.textContent = "Error while downloading."; return; }
+      const blob = await response.blob();
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = "downloads.zip";
+      link.click();
+      bulkStatus.textContent = "Your videos are downloading as a ZIP file.";
+    } catch (err) {
+      console.error(err);
+      bulkStatus.textContent = "Something went wrong. Try again.";
+    }
+  });
+</script>
 
-  <!-- Main JS -->
-  <script src="/js/app.js"></script>
+<script src="/js/app.js"></script>
 </body>
 </html>
