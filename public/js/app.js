@@ -1,47 +1,36 @@
 // ====== DOM Elements ======
 const form = document.getElementById("dl-form");
 const urlInput = document.getElementById("url");
-const qualitySelect = document.getElementById("quality");
-const checkBtn = document.getElementById("checkBtn");
-const downloadBtn = document.getElementById("downloadBtn");
-const loader = document.getElementById("loader");
 const preview = document.getElementById("preview");
-const thumb = document.getElementById("thumb");
-const titleEl = document.getElementById("title");
-const metaEl = document.getElementById("meta");
-const errorEl = document.getElementById("error");
+const loader = document.getElementById("loader");
 
-let videoInfo = null;
-
-// Utility: format seconds to HH:MM:SS
-function formatDuration(sec) {
-  if (!sec && sec !== 0) return "N/A";
-  const h = Math.floor(sec / 3600);
-  const m = Math.floor((sec % 3600) / 60);
-  const s = sec % 60;
-  return [
-    h > 0 ? String(h).padStart(2, "0") : null,
-    String(m).padStart(2, "0"),
-    String(s).padStart(2, "0")
-  ].filter(x => x !== null).join(":");
+function formatDuration(seconds) {
+  if (!seconds) return "N/A";
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = seconds % 60;
+  return [h, m, s].filter((v, i) => v > 0 || i > 0).map(v => String(v).padStart(2, "0")).join(":");
 }
 
-// ===== Check Button =====
+function formatFileSize(bytes) {
+  if (!bytes) return "Unknown";
+  const units = ["B", "KB", "MB", "GB"];
+  let i = 0;
+  while (bytes >= 1024 && i < units.length - 1) {
+    bytes /= 1024;
+    i++;
+  }
+  return `${bytes.toFixed(1)} ${units[i]}`;
+}
+
+// ====== Handle Form Submit ======
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
   const url = urlInput.value.trim();
-  if (!url) {
-    errorEl.textContent = "Please enter URL";
-    errorEl.classList.remove("hidden");
-    return;
-  }
+  if (!url) return alert("Please enter a valid video URL!");
 
-  // Reset UI
-  loader.classList.remove("hidden");
-  preview.classList.add("hidden");
-  errorEl.classList.add("hidden");
-  downloadBtn.disabled = true;
-  qualitySelect.innerHTML = "";
+  loader.style.display = "block";
+  preview.innerHTML = "";
 
   try {
     const res = await fetch("/api/info", {
@@ -51,103 +40,63 @@ form.addEventListener("submit", async (e) => {
     });
 
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Failed to fetch video info");
+    loader.style.display = "none";
 
-    videoInfo = data;
-
-    // Populate preview
-    thumb.src = data.thumbnail || "";
-    titleEl.textContent = data.title || "Untitled";
-    metaEl.textContent = `Uploader: ${data.uploader || "Unknown"} | Duration: ${formatDuration(data.duration)}`;
-
-    // Populate quality / format dropdown
-    if (data.formats && data.formats.length > 0) {
-      data.formats.forEach((f) => {
-        // compute size text
-        const sizeBytes = f.filesize || f.filesize_approx || null;
-        const sizeText = sizeBytes
-          ? `${(sizeBytes / (1024 * 1024)).toFixed(1)} MB`
-          : "N/A";
-        const resText = f.resolution || (f.acodec && !f.vcodec ? "Audio" : f.format_note || "Unknown");
-        const option = document.createElement("option");
-        option.value = f.itag;
-        option.textContent = `${resText} | ${f.ext || ""} | ${sizeText}`;
-        qualitySelect.appendChild(option);
-      });
-    } else {
-      // fallback
-      const option = document.createElement("option");
-      option.value = "best";
-      option.textContent = "Best Available";
-      qualitySelect.appendChild(option);
+    if (data.error) {
+      preview.innerHTML = `<p class="text-red-500">${data.error}</p>`;
+      return;
     }
 
-    preview.classList.remove("hidden");
-    downloadBtn.disabled = false;
+    // ====== Build Preview Card ======
+    preview.innerHTML = `
+      <div class="bg-white dark:bg-gray-800 shadow-lg rounded-xl p-4">
+        <img src="${data.thumbnail}" alt="Thumbnail" class="rounded-lg mb-3 w-full max-h-64 object-cover"/>
+        <h2 class="text-lg font-bold mb-2">${data.title}</h2>
+        <p class="text-sm text-gray-600 dark:text-gray-300">Uploader: ${data.uploader || "Unknown"}</p>
+        <p class="text-sm text-gray-600 dark:text-gray-300">Duration: ${formatDuration(data.duration)}</p>
+        <div class="mt-4">
+          <h3 class="font-semibold mb-2">Available Formats:</h3>
+          <div class="grid grid-cols-2 gap-2" id="formats"></div>
+        </div>
+      </div>
+    `;
+
+    const formatsDiv = document.getElementById("formats");
+    data.formats.forEach((f) => {
+      const btn = document.createElement("button");
+      btn.className =
+        "px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm";
+      const sizeText = f.filesize ? formatFileSize(f.filesize) : "Unknown size";
+      btn.innerText = `${f.resolution} • ${f.ext} • ${sizeText}`;
+      btn.onclick = () => downloadVideo(data.webpage_url, f.itag, f.ext);
+      formatsDiv.appendChild(btn);
+    });
   } catch (err) {
-    errorEl.textContent = err.message;
-    errorEl.classList.remove("hidden");
-  } finally {
-    loader.classList.add("hidden");
+    loader.style.display = "none";
+    console.error("Error:", err);
+    preview.innerHTML = `<p class="text-red-500">Failed to fetch video info. Try again.</p>`;
   }
 });
 
-// ===== Download Button =====
-downloadBtn.addEventListener("click", async () => {
-  if (!videoInfo) return;
-
-  let itag = qualitySelect.value;
-  if (itag === "best") {
-    // pick best available (e.g. first from formats sorted by quality)
-    itag = videoInfo.formats?.[0]?.itag || itag;
-  }
-
-  // Update UI
-  downloadBtn.textContent = "Downloading...";
-  downloadBtn.disabled = true;
-
+// ====== Download Video ======
+async function downloadVideo(url, itag, ext = "mp4") {
   try {
     const res = await fetch("/api/download", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ url: videoInfo.webpage_url, itag }),
+      body: JSON.stringify({ url, itag }),
     });
 
-    if (!res.ok) {
-      const errData = await res.json();
-      throw new Error(errData.error || "Download failed");
-    }
+    if (!res.ok) throw new Error("Download failed");
 
+    // Convert response into Blob and download
     const blob = await res.blob();
-
-    // Determine extension
-    const fmt = videoInfo.formats?.find((f) => f.itag == itag);
-    let ext = "mp4";
-    if (fmt) {
-      // If audio only format (no video), maybe ext is audio codec or simply pick f.ext
-      if (fmt.vcodec === "none") {
-        ext = fmt.ext || "mp3";
-      } else {
-        ext = fmt.ext || "mp4";
-      }
-    }
-
-    const safeTitle = (videoInfo.title || "video")
-      .replace(/[^a-z0-9]/gi, "_")
-      .substring(0, 50);
-
     const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = `${safeTitle}.${ext}`;
-    document.body.appendChild(a);
+    a.href = window.URL.createObjectURL(blob);
+    a.download = `video_${itag}.${ext}`;
     a.click();
-    URL.revokeObjectURL(a.href);
-    a.remove();
   } catch (err) {
-    alert(err.message || "Error while downloading");
     console.error("Download error:", err);
-  } finally {
-    downloadBtn.textContent = "Download";
-    downloadBtn.disabled = false;
+    alert("Download failed. Please try another format.");
   }
-});
+}
