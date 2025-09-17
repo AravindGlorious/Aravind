@@ -17,10 +17,23 @@ const defaultOptions = {
 // 🔹 Get video info
 export async function getInfo(url) {
   try {
-    const info = await ytdlp(url, {
+    let info = await ytdlp(url, {
       ...defaultOptions,
       dumpSingleJson: true,
+      encoding: "utf8",  // make sure string output is UTF-8
     });
+
+    // Force JSON parse if string
+    if (typeof info === "string") {
+      try {
+        info = JSON.parse(info);
+      } catch (e) {
+        console.error("yt-dlp returned invalid JSON:", info);
+        throw new Error(
+          "yt-dlp output invalid. Restricted / login-required videos may need cookies."
+        );
+      }
+    }
 
     let thumb =
       info.thumbnail ||
@@ -45,7 +58,9 @@ export async function getInfo(url) {
     };
   } catch (err) {
     console.error("yt-dlp getInfo error:", err);
-    throw new Error("Failed to fetch video info");
+    throw new Error(
+      "Failed to fetch video info. Restricted / login-required videos may need cookies."
+    );
   }
 }
 
