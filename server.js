@@ -33,10 +33,13 @@ app.post("/api/info", async (req, res) => {
   if (!url) return res.status(400).json({ error: "URL required" });
 
   try {
-    const info = await ytDlp(url, {
+    const raw = await ytDlp(url, {
       ...ytDlpOptions,
       dumpSingleJson: true,
+      encoding: "utf8",
     });
+
+    const info = JSON.parse(raw);
 
     const response = {
       title: info.title,
@@ -58,8 +61,7 @@ app.post("/api/info", async (req, res) => {
   } catch (err) {
     console.error("yt-dlp info error:", err.message);
     res.status(500).json({
-      error:
-        "Failed to fetch video info. It might be restricted or require cookies.",
+      error: "Failed to fetch video info. May require cookies.",
       details: err.message,
     });
   }
@@ -70,23 +72,26 @@ app.post("/api/download", async (req, res) => {
   const { url, itag } = req.body;
   if (!url || !itag) return res.status(400).json({ error: "URL & itag required" });
 
-  const tempFile = path.join(__dirname, `temp_${Date.now()}.mp4`);
-
   try {
-    await ytDlp(url, {
+    res.setHeader("Content-Disposition", `attachment; filename="video.mp4"`);
+    res.setHeader("Content-Type", "video/mp4");
+
+    const proc = ytDlp.exec(url, {
       ...ytDlpOptions,
       format: itag,
-      output: tempFile,
+      output: "-", // stream to stdout
     });
 
-    res.download(tempFile, (err) => {
-      if (err) console.error("Download error:", err);
-      fs.unlink(tempFile, () => {}); // cleanup temp file
+    proc.stdout.pipe(res);
+    proc.stderr.on("data", (d) => console.log("yt-dlp:", d.toString()));
+    proc.on("error", (err) => {
+      console.error("yt-dlp error:", err);
+      res.status(500).end("Download failed");
     });
   } catch (err) {
     console.error("yt-dlp download error:", err.message);
     res.status(500).json({
-      error: "Download failed. Video may be restricted or invalid.",
+      error: "Download failed.",
       details: err.message,
     });
   }
