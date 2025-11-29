@@ -18,14 +18,21 @@ function resetPreview() {
   downloadOptions.innerHTML = "";
 }
 
-// ====== Format file size helper ======
+// ====== Format File Size Helper ======
 function formatSize(bytes) {
   if (!bytes) return "";
+  const kb = bytes / 1024;
   const mb = bytes / (1024 * 1024);
-  return `${mb.toFixed(1)} MB`;
+  const gb = bytes / (1024 * 1024 * 1024);
+  
+  if (gb >= 1) return `${gb.toFixed(1)} GB`;
+  if (mb >= 1) return `${mb.toFixed(1)} MB`;
+  if (kb >= 1) return `${kb.toFixed(1)} KB`;
+  
+  return `${bytes} bytes`;
 }
 
-// ====== Fetch video info ======
+// ====== Fetch Video Info ======
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
   const url = urlInput.value.trim();
@@ -51,7 +58,7 @@ form.addEventListener("submit", async (e) => {
 
     // Show preview
     preview.classList.remove("hidden");
-    thumb.src = data.thumbnail || "";
+    thumb.src = data.thumbnail || "https://via.placeholder.com/150"; // Fallback image if no thumbnail
     titleEl.textContent = data.title || "Untitled Video";
 
     const mins = Math.floor((data.duration || 0) / 60);
