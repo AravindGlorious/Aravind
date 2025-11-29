@@ -21,13 +21,12 @@ const cookiesFile = path.join(__dirname, "cookies.txt");
 // yt-dlp options
 const ytDlpOptions = {
   noWarnings: true,
-  noCallHome: true,
   preferFreeFormats: true,
   addHeader: [
     "user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0 Safari/537.36",
     "referer: https://www.youtube.com/",
   ],
-  cookies: fs.existsSync(cookiesFile) ? cookiesFile : undefined,
+  cookies: fs.existsSync(cookiesFile) ? cookiesFile : undefined,  // Use cookies file if exists
 };
 
 // ===== /api/info =====
@@ -53,7 +52,9 @@ app.post("/api/info", async (req, res) => {
             "Update your cookies.txt or export fresh cookies from your browser.",
         });
       }
-    } else info = raw;
+    } else {
+      info = raw;
+    }
 
     res.json({
       title: info.title,
@@ -75,7 +76,7 @@ app.post("/api/info", async (req, res) => {
     res.status(500).json({
       error: "Failed to fetch video info",
       details:
-        err.message.includes("Sign in") 
+        err.message.includes("Sign in")
           ? "Video requires login/cookies. Update cookies.txt."
           : err.message,
     });
@@ -94,10 +95,13 @@ app.post("/api/download", async (req, res) => {
       output: "-",
     });
 
+    // Dynamically set content-type based on file extension
+    const contentType = itag.includes('audio') ? 'audio/mp4' : 'video/mp4';
     res.setHeader("Content-Disposition", `attachment; filename="video_${itag}.mp4"`);
-    res.setHeader("Content-Type", "video/mp4");
+    res.setHeader("Content-Type", contentType);
 
     proc.stdout.pipe(res);
+
     proc.stderr.on("data", (d) => console.log("yt-dlp:", d.toString()));
     proc.on("error", (err) => {
       console.error("yt-dlp download error:", err);
