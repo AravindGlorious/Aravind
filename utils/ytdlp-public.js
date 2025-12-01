@@ -86,6 +86,13 @@ export async function streamDownload({ url, format = "best" }, res) {
     const proc = ytdlp(url, options);
     proc.stdout.pipe(res);
 
+    // Set dynamic content type based on the format
+    proc.stdout.on("data", (data) => {
+      const contentType = format.includes("mp4") ? "video/mp4" : "video/webm";
+      res.setHeader("Content-Type", contentType);
+      res.setHeader("Content-Disposition", `attachment; filename="video.${format}"`);
+    });
+
     proc.stderr.on("data", (chunk) => {
       console.error("YT-DLP STDERR:", chunk.toString());
     });
