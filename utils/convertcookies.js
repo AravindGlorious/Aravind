@@ -32,18 +32,18 @@ export function convertCookies(jsonPath, outputPath) {
   ];
 
   // Iterate through each cookie and convert to Netscape format
-  cookies.forEach((c, index) => {
+  cookies.forEach((cookie, index) => {
     try {
-      // yt-dlp expects: domain, includeSubdomains, path, secure, expiration, name, value
-      const domain = c.domain || c.host || ".youtube.com"; // Default to YouTube if domain is missing
+      // Ensure each cookie has the necessary fields
+      const domain = cookie.domain || cookie.host || ".youtube.com"; // Default to YouTube if domain is missing
       const flag = domain.startsWith(".") ? "TRUE" : "FALSE"; // Include subdomains if domain starts with a dot
-      const cookiePath = c.path || "/"; // Default cookie path is "/"
-      const secure = c.secure ? "TRUE" : "FALSE"; // Secure flag
-      const expiration = c.expirationDate
-        ? Math.floor(c.expirationDate / 1000) // Convert milliseconds to seconds
+      const cookiePath = cookie.path || "/"; // Default cookie path is "/"
+      const secure = cookie.secure ? "TRUE" : "FALSE"; // Secure flag
+      const expiration = cookie.expirationDate
+        ? Math.floor(cookie.expirationDate / 1000) // Convert milliseconds to seconds
         : Math.floor(Date.now() / 1000) + 3600; // Fallback expiration (+1hr)
-      const name = c.name || c.key; // Cookie name (use key if name is missing)
-      const value = c.value || ""; // Cookie value (fallback to empty string)
+      const name = cookie.name || cookie.key; // Cookie name (use key if name is missing)
+      const value = cookie.value || ""; // Cookie value (fallback to empty string)
 
       // Skip invalid cookies or those missing required fields
       if (name && value) {
@@ -58,8 +58,12 @@ export function convertCookies(jsonPath, outputPath) {
 
   // If there are valid cookies, write them to the output file
   if (lines.length > 3) {
-    fs.writeFileSync(outputPath, lines.join("\n"));
-    console.log("✅ Converted cookies saved to", outputPath);
+    try {
+      fs.writeFileSync(outputPath, lines.join("\n"));
+      console.log("✅ Converted cookies saved to", outputPath);
+    } catch (err) {
+      console.error("❌ Failed to write the output file:", err.message);
+    }
   } else {
     console.warn("⚠️ No valid cookies to save.");
   }
