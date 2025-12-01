@@ -2,8 +2,10 @@ import ytdlp from "yt-dlp-exec";
 import ffmpegPath from "ffmpeg-static";
 import fs from "fs";
 
+// Default cookie file path
 const cookiesPath = process.env.YOUTUBE_COOKIES_PATH || "/tmp/cookies.txt";
 
+// Handle cookie environment variable if provided
 if (process.env.YOUTUBE_COOKIES) {
   try {
     fs.writeFileSync(cookiesPath, process.env.YOUTUBE_COOKIES.trim());
@@ -15,6 +17,7 @@ if (process.env.YOUTUBE_COOKIES) {
   console.log("ℹ️ No cookies ENV variable provided. Public videos only.");
 }
 
+// 🔹 Get video info
 export async function getVideoInfo(url) {
   try {
     const options = {
@@ -25,9 +28,11 @@ export async function getVideoInfo(url) {
       addHeader: ["referer:youtube.com", "user-agent:googlebot"],
       cookies: fs.existsSync(cookiesPath) ? cookiesPath : undefined,
     };
+
     const json = await ytdlp(url, options);
     const primary = json?.entries?.length ? json.entries[0] : json;
 
+    // Return useful info with defaults if necessary
     return {
       title: primary?.title || "Untitled",
       thumbnail: primary?.thumbnail || primary?.thumbnails?.[0]?.url || "",
@@ -43,6 +48,7 @@ export async function getVideoInfo(url) {
   }
 }
 
+// 🔹 Stream download
 export async function streamDownload({ url, format = "best" }, res) {
   try {
     const options = {
@@ -58,7 +64,16 @@ export async function streamDownload({ url, format = "best" }, res) {
     const proc = ytdlp(url, options);
     proc.stdout.pipe(res);
 
-    proc.stderr.on("data", (chunk) => console.error("YT-DLP STDERR:", chunk.toString()));
+    // Set content type dynamically based on format (example for mp4)
+    proc.stdout.on("data", (data) => {
+      const contentType = format.includes("mp4") ? "video/mp4" : "video/webm";
+      res.setHeader("Content-Type", contentType);
+      res.setHeader("Content-Disposition", `attachment; filename="video.${format}"`);
+    });
+
+    proc.stderr.on("data", (chunk) => {
+      console.error("YT-DLP STDERR:", chunk.toString());
+    });
 
     return new Promise((resolve, reject) => {
       proc.on("close", (code) => (code !== 0 ? reject(new Error(`yt-dlp exited with code ${code}`)) : resolve()));
